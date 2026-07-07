@@ -1,0 +1,16 @@
+.next
+.worktrees
+node_modules
+out
+tsconfig.tsbuildinfo
+
+certificates
+.DS_Store
+.env
+.env.local
+.env.*.local
+.open-next
+.wrangler
+.codex
+.superpowers
+.npm-cache

@@ -1,0 +1,39 @@
+{
+  "name": "fiber-wallet-ux-kit",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --experimental-https",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "pages:deploy": "npx wrangler pages deploy out --project-name fiber-wallet-ux-kit"
+  },
+  "dependencies": {
+    "@ckb-ccc/connector-react": "^1.0.0",
+    "@nervosnetwork/fiber-js": "^0.8.0-rc1",
+    "@scure/bip39": "^2.0.1",
+    "jsqr": "^1.4.0",
+    "next": "14.2.18",
+    "qrcode.react": "^4.2.0",
+    "react": "^18",
+    "react-dom": "^18"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.18",
+    "jsdom": "^25.0.1",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5",
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "^2.1.9"
+  }
+}
