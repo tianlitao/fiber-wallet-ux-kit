@@ -11,10 +11,10 @@ The goal is to show how wallets and apps can integrate Fiber node startup, local
 ## Flow
 
 1. Open the hosted demo at `/en`.
-2. Show the onboarding screen.
+2. Show the Dashboard identity wallet card.
 3. Create or import the 12-word Fiber identity wallet.
 4. Set a local password.
-5. Unlock the identity wallet and start the Fiber node.
+5. Unlock the identity wallet from the Dashboard and start the Fiber node.
 6. Point out the runtime status, node pubkey, connected peers, and default peer readiness.
 7. Connect a CKB Testnet wallet through CCC.
 8. Open the Channels page.

@@ -51,5 +51,7 @@ describe("MobileTabBar", () => {
       "aria-current",
       "page",
     );
+    expect(screen.getByText("fiber.nervosscan.com")).toBeInTheDocument();
+    expect(screen.getByText("连接中")).toBeInTheDocument();
   });
 });

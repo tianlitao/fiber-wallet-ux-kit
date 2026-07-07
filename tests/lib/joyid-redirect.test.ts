@@ -56,7 +56,7 @@ describe("joyid redirect helpers", () => {
     try {
       const signer = new JoyIdRedirectCkbSigner(
         { addressPrefix: "ckt" } as any,
-        "Fiber Wallet",
+        "Fiber Wallet UX Kit",
         "icon",
       );
 
@@ -68,7 +68,7 @@ describe("joyid redirect helpers", () => {
         returnUrl: window.location.pathname + window.location.search,
         payload: {
           config: expect.objectContaining({
-            name: "Fiber Wallet",
+            name: "Fiber Wallet UX Kit",
           }),
         },
       });
@@ -228,7 +228,7 @@ describe("joyid redirect helpers", () => {
     try {
       const signer = new JoyIdRedirectCkbSigner(
         { addressPrefix: "ckt" } as any,
-        "Fiber Wallet",
+        "Fiber Wallet UX Kit",
         "icon",
       );
       (signer as any).getAddressObj = vi.fn().mockResolvedValue({
@@ -279,7 +279,7 @@ describe("joyid redirect helpers", () => {
     try {
       const signer = new JoyIdRedirectCkbSigner(
         { addressPrefix: "ckt" } as any,
-        "Fiber Wallet",
+        "Fiber Wallet UX Kit",
         "icon",
       );
       (signer as any).getAddressObj = vi.fn().mockResolvedValue({

@@ -45,22 +45,6 @@ export function useFiber() {
   return useContext(FiberContext);
 }
 
-function getFiberRuntimeSupportError(): string | null {
-  if (typeof SharedArrayBuffer === "undefined") {
-    return "SharedArrayBuffer is not available in this browser environment. Fiber node startup requires a cross-origin-isolated page and a browser or WebView that supports SharedArrayBuffer.";
-  }
-
-  if (
-    typeof window !== "undefined" &&
-    "crossOriginIsolated" in window &&
-    window.crossOriginIsolated === false
-  ) {
-    return "This page is not running in a cross-origin-isolated context. Fiber node startup requires COOP/COEP headers and a browser environment that keeps crossOriginIsolated enabled.";
-  }
-
-  return null;
-}
-
 export function FiberProvider({ children }: { children: React.ReactNode }) {
   const [fiber, setFiber] = useState<FiberType | null>(null);
   const [status, setStatus] = useState<FiberStatus>("idle");
@@ -104,11 +88,6 @@ export function FiberProvider({ children }: { children: React.ReactNode }) {
       setError(null);
 
       try {
-        const runtimeError = getFiberRuntimeSupportError();
-        if (runtimeError) {
-          throw new Error(runtimeError);
-        }
-
         const { Fiber } = await import("@nervosnetwork/fiber-js");
         const instance = new Fiber();
         await instance.start(

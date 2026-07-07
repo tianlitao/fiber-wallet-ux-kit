@@ -11,7 +11,7 @@ import type {
 import ConnectWallet from "@/components/ConnectWallet";
 import InvoiceQrCard from "@/components/InvoiceQrCard";
 import InvoiceQrModal from "@/components/InvoiceQrModal";
-import WalletShell from "@/components/shell/WalletShell";
+import Navigation from "@/components/Navigation";
 import { ckbToShannons, shannonsToDisplay } from "@/lib/fiberConfig";
 import { useFiber } from "@/lib/fiberContext";
 import { useI18n } from "@/lib/i18n/useI18n";
@@ -54,45 +54,45 @@ export default function InvoicesPage() {
 
   if (status !== "running") {
     return (
-      <WalletShell walletSlot={<ConnectWallet />}>
-        <div className="mobile-page-shell max-w-6xl mx-auto px-0 py-0">
+      <div className="min-h-screen">
+        <Navigation />
+        <div className="mobile-page-shell max-w-6xl mx-auto px-4 py-4 md:py-6">
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h1 className="text-3xl font-semibold tracking-tight">{t("invoicesPage.title")}</h1>
+            <h1 className="text-2xl font-bold">{t("invoicesPage.title")}</h1>
+            <ConnectWallet />
           </div>
           <div className="rounded-xl bg-[#1a1a1a] border border-white/10 p-6 text-center text-white/40">
             {t("invoicesPage.startNodeFirst")}
           </div>
         </div>
-      </WalletShell>
+      </div>
     );
   }
 
   if (!defaultPeerConnected) {
     return (
-      <WalletShell walletSlot={<ConnectWallet />}>
-        <div className="mobile-page-shell max-w-6xl mx-auto px-0 py-0">
+      <div className="min-h-screen">
+        <Navigation />
+        <div className="mobile-page-shell max-w-6xl mx-auto px-4 py-4 md:py-6">
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h1 className="text-3xl font-semibold tracking-tight">{t("invoicesPage.title")}</h1>
+            <h1 className="text-2xl font-bold">{t("invoicesPage.title")}</h1>
+            <ConnectWallet />
           </div>
           <div className="rounded-xl bg-[#1a1a1a] border border-white/10 p-6 text-center text-white/40">
             {t("invoicesPage.defaultPeerRequired")}
           </div>
         </div>
-      </WalletShell>
+      </div>
     );
   }
 
   return (
-    <WalletShell
-      walletSlot={<ConnectWallet />}
-      fab={{
-        mobileLabel: t("shell.fabCreateInvoice"),
-        onClick: () => setTab("create"),
-      }}
-    >
-      <div className="mobile-page-shell max-w-6xl mx-auto px-0 py-0">
+    <div className="min-h-screen">
+      <Navigation />
+      <div className="mobile-page-shell max-w-6xl mx-auto px-4 py-4 md:py-6">
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h1 className="text-3xl font-semibold tracking-tight">{t("invoicesPage.title")}</h1>
+          <h1 className="text-2xl font-bold">{t("invoicesPage.title")}</h1>
+          <ConnectWallet />
         </div>
 
         <div className="mb-6 grid grid-cols-3 gap-2 sm:flex sm:gap-1">
@@ -132,7 +132,7 @@ export default function InvoicesPage() {
 
         <RecentInvoicesCard items={recentInvoices} />
       </div>
-    </WalletShell>
+    </div>
   );
 }
 
@@ -144,8 +144,6 @@ function CreateInvoice({
   onRecentInvoicesChange: () => void;
 }) {
   const { t } = useI18n();
-  const amountInputId = "invoice-create-amount";
-  const descriptionInputId = "invoice-create-description";
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [result, setResult] = useState<InvoiceResult | null>(null);
@@ -199,11 +197,10 @@ function CreateInvoice({
       </h2>
       <div className="space-y-4">
         <div>
-          <label htmlFor={amountInputId} className="block text-sm text-white/60 mb-1">
+          <label className="block text-sm text-white/60 mb-1">
             {t("invoicesPage.amountLabel")}
           </label>
           <input
-            id={amountInputId}
             type="text"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
@@ -214,11 +211,10 @@ function CreateInvoice({
           />
         </div>
         <div>
-          <label htmlFor={descriptionInputId} className="block text-sm text-white/60 mb-1">
+          <label className="block text-sm text-white/60 mb-1">
             {t("invoicesPage.descriptionOptionalLabel")}
           </label>
           <input
-            id={descriptionInputId}
             type="text"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -297,7 +293,6 @@ function ParseInvoice({
   onRecentInvoicesChange: () => void;
 }) {
   const { t } = useI18n();
-  const invoiceStringInputId = "invoice-parse-string";
   const [invoiceStr, setInvoiceStr] = useState("");
   const [result, setResult] = useState<ParseInvoiceResult | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -334,11 +329,10 @@ function ParseInvoice({
       </h2>
       <div className="space-y-4">
         <div>
-          <label htmlFor={invoiceStringInputId} className="block text-sm text-white/60 mb-1">
+          <label className="block text-sm text-white/60 mb-1">
             {t("invoicesPage.invoiceStringLabel")}
           </label>
           <textarea
-            id={invoiceStringInputId}
             value={invoiceStr}
             onChange={(e) => setInvoiceStr(e.target.value)}
             placeholder={t("invoicesPage.invoiceStringPlaceholder")}
@@ -384,7 +378,6 @@ function LookupInvoice({
   onRecentInvoicesChange: () => void;
 }) {
   const { t } = useI18n();
-  const paymentHashInputId = "invoice-lookup-payment-hash";
   const [paymentHash, setPaymentHash] = useState("");
   const [result, setResult] = useState<GetInvoiceResult | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -421,11 +414,10 @@ function LookupInvoice({
       </h2>
       <div className="space-y-4">
         <div>
-          <label htmlFor={paymentHashInputId} className="block text-sm text-white/60 mb-1">
+          <label className="block text-sm text-white/60 mb-1">
             {t("invoicesPage.paymentHashLabel")}
           </label>
           <input
-            id={paymentHashInputId}
             type="text"
             value={paymentHash}
             onChange={(e) => setPaymentHash(e.target.value)}

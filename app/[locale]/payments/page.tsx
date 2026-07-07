@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { GetPaymentCommandResult } from "@nervosnetwork/fiber-js";
 import ConnectWallet from "@/components/ConnectWallet";
 import InvoiceScanner from "@/components/InvoiceScanner";
-import WalletShell from "@/components/shell/WalletShell";
+import Navigation from "@/components/Navigation";
 import { ckbToShannons, shannonsToDisplay } from "@/lib/fiberConfig";
 import { useFiber } from "@/lib/fiberContext";
 import { useI18n } from "@/lib/i18n/useI18n";
@@ -45,45 +45,45 @@ export default function PaymentsPage() {
 
   if (status !== "running") {
     return (
-      <WalletShell walletSlot={<ConnectWallet />}>
-        <div className="mobile-page-shell max-w-6xl mx-auto px-0 py-0">
+      <div className="min-h-screen">
+        <Navigation />
+        <div className="mobile-page-shell max-w-6xl mx-auto px-4 py-4 md:py-6">
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h1 className="text-3xl font-semibold tracking-tight">{t("paymentsPage.title")}</h1>
+            <h1 className="text-2xl font-bold">{t("paymentsPage.title")}</h1>
+            <ConnectWallet />
           </div>
           <div className="rounded-xl bg-[#1a1a1a] border border-white/10 p-6 text-center text-white/40">
             {t("paymentsPage.startNodeFirst")}
           </div>
         </div>
-      </WalletShell>
+      </div>
     );
   }
 
   if (!defaultPeerConnected) {
     return (
-      <WalletShell walletSlot={<ConnectWallet />}>
-        <div className="mobile-page-shell max-w-6xl mx-auto px-0 py-0">
+      <div className="min-h-screen">
+        <Navigation />
+        <div className="mobile-page-shell max-w-6xl mx-auto px-4 py-4 md:py-6">
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h1 className="text-3xl font-semibold tracking-tight">{t("paymentsPage.title")}</h1>
+            <h1 className="text-2xl font-bold">{t("paymentsPage.title")}</h1>
+            <ConnectWallet />
           </div>
           <div className="rounded-xl bg-[#1a1a1a] border border-white/10 p-6 text-center text-white/40">
             {t("paymentsPage.defaultPeerRequired")}
           </div>
         </div>
-      </WalletShell>
+      </div>
     );
   }
 
   return (
-    <WalletShell
-      walletSlot={<ConnectWallet />}
-      fab={{
-        mobileLabel: t("shell.fabSendPayment"),
-        onClick: () => setTab("send"),
-      }}
-    >
-      <div className="mobile-page-shell max-w-6xl mx-auto px-0 py-0">
+    <div className="min-h-screen">
+      <Navigation />
+      <div className="mobile-page-shell max-w-6xl mx-auto px-4 py-4 md:py-6">
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h1 className="text-3xl font-semibold tracking-tight">{t("paymentsPage.title")}</h1>
+          <h1 className="text-2xl font-bold">{t("paymentsPage.title")}</h1>
+          <ConnectWallet />
         </div>
 
         <div className="mb-6 grid grid-cols-2 gap-2 sm:flex sm:gap-1">
@@ -117,7 +117,7 @@ export default function PaymentsPage() {
 
         <RecentPaymentsCard items={recentPayments} />
       </div>
-    </WalletShell>
+    </div>
   );
 }
 
@@ -129,9 +129,6 @@ function SendPayment({
   onRecentPaymentsChange: () => void;
 }) {
   const { t } = useI18n();
-  const invoiceStringInputId = "payment-send-invoice-string";
-  const targetPubkeyInputId = "payment-send-target-pubkey";
-  const amountInputId = "payment-send-amount";
   const [mode, setMode] = useState<"invoice" | "keysend">("invoice");
   const [invoice, setInvoice] = useState("");
   const [targetPubkey, setTargetPubkey] = useState("");
@@ -265,7 +262,7 @@ function SendPayment({
       <div className="space-y-4">
         {mode === "invoice" ? (
           <div>
-            <label htmlFor={invoiceStringInputId} className="block text-sm text-white/60 mb-1">
+            <label className="block text-sm text-white/60 mb-1">
               {t("paymentsPage.invoiceStringLabel")}
             </label>
             <div className="mb-2">
@@ -278,7 +275,6 @@ function SendPayment({
               </button>
             </div>
             <textarea
-              id={invoiceStringInputId}
               value={invoice}
               onChange={(e) => {
                 setInvoice(e.target.value);
@@ -308,11 +304,10 @@ function SendPayment({
         ) : (
           <>
             <div>
-              <label htmlFor={targetPubkeyInputId} className="block text-sm text-white/60 mb-1">
+              <label className="block text-sm text-white/60 mb-1">
                 {t("paymentsPage.targetPubkeyLabel")}
               </label>
               <input
-                id={targetPubkeyInputId}
                 type="text"
                 value={targetPubkey}
                 onChange={(e) => setTargetPubkey(e.target.value)}
@@ -321,11 +316,10 @@ function SendPayment({
               />
             </div>
             <div>
-              <label htmlFor={amountInputId} className="block text-sm text-white/60 mb-1">
+              <label className="block text-sm text-white/60 mb-1">
                 {t("paymentsPage.amountLabel")}
               </label>
               <input
-                id={amountInputId}
                 type="text"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
@@ -364,7 +358,6 @@ function PaymentStatus({
   onRecentPaymentsChange: () => void;
 }) {
   const { t } = useI18n();
-  const paymentHashInputId = "payment-status-hash";
   const [paymentHash, setPaymentHash] = useState("");
   const [result, setResult] = useState<GetPaymentCommandResult | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -405,11 +398,10 @@ function PaymentStatus({
       </h2>
       <div className="space-y-4">
         <div>
-          <label htmlFor={paymentHashInputId} className="block text-sm text-white/60 mb-1">
+          <label className="block text-sm text-white/60 mb-1">
             {t("paymentsPage.paymentHashLabel")}
           </label>
           <input
-            id={paymentHashInputId}
             type="text"
             value={paymentHash}
             onChange={(e) => setPaymentHash(e.target.value)}

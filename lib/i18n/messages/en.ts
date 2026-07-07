@@ -35,44 +35,6 @@ const enMessages = {
   wallet: {
     connect: "Connect Wallet",
   },
-  shell: {
-    fabOpenChannel: "Open Channel",
-    fabCreateInvoice: "Create Invoice",
-    fabSendPayment: "Send Payment",
-    railBrand: "Fiber Wallet UX Kit",
-    mobileNavLabel: "Mobile navigation",
-  },
-  onboarding: {
-    welcomeTitle: "Welcome to Fiber Wallet UX Kit",
-    welcomeBody:
-      "Create a new 12-word wallet or import an existing one to start your Fiber node.",
-    createWallet: "Create Wallet",
-    importWallet: "Import Wallet",
-    continue: "Continue",
-    back: "Back",
-    backupTitle: "Back up your wallet",
-    backupBody:
-      "These 12 words are the only way to restore this wallet. Fiber Wallet UX Kit cannot recover them for you.",
-    backupConfirmOne: "I wrote these 12 words down offline.",
-    backupConfirmTwo:
-      "I understand anyone with these words can control this wallet.",
-    backupConfirmThree:
-      "I understand Fiber Wallet UX Kit cannot recover these words if I lose them.",
-    importTitle: "Import wallet",
-    importBody: "Paste or type your 12-word wallet to continue.",
-    importLabel: "12-word mnemonic",
-    pasteHint: "Paste the full mnemonic or type each word carefully.",
-    encryptTitle: "Protect this browser",
-    encryptBody:
-      "Set a local password to encrypt the wallet stored in this browser.",
-    password: "Local wallet password",
-    confirmPassword: "Confirm password",
-    saveWallet: "Save Wallet",
-    unlockTitle: "Unlock wallet",
-    unlockBody:
-      "Enter your password to unlock the local wallet and start the Fiber node.",
-    unlockButton: "Unlock & Start Node",
-  },
   dashboard: {
     title: "Dashboard",
     fiberNode: "Fiber Node",

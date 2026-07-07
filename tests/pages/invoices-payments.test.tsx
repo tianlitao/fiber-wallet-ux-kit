@@ -88,7 +88,7 @@ describe("Invoices and Payments pages", () => {
     fireEvent.click(screen.getByRole("button", { name: "查询发票" }));
 
     expect(
-      screen.getByLabelText("支付哈希"),
+      screen.getByPlaceholderText("例如 0x..."),
     ).toBeInTheDocument();
   });
 
@@ -108,7 +108,7 @@ describe("Invoices and Payments pages", () => {
     fireEvent.click(screen.getByRole("button", { name: "查询状态" }));
 
     expect(
-      screen.getByLabelText("支付哈希"),
+      screen.getByPlaceholderText("例如 0x..."),
     ).toBeInTheDocument();
   });
 

@@ -101,7 +101,7 @@ The Vitest suite covers:
 - Fiber runtime support errors;
 - JoyID bridge request and redirect state;
 - channel funding resume behavior;
-- dashboard, onboarding, channels, invoices, and payments pages;
+- dashboard identity-wallet flows, channels, invoices, and payments pages;
 - mobile invoice and payment paths;
 - QR card and scanner components.
 

@@ -32,42 +32,6 @@ export const zh: Messages = {
   wallet: {
     connect: "连接钱包",
   },
-  shell: {
-    fabOpenChannel: "打开通道",
-    fabCreateInvoice: "创建发票",
-    fabSendPayment: "发送支付",
-    railBrand: "Fiber Wallet UX Kit",
-    mobileNavLabel: "移动导航",
-  },
-  onboarding: {
-    welcomeTitle: "欢迎使用 Fiber Wallet UX Kit",
-    welcomeBody:
-      "创建新的 12 个单词钱包，或导入现有钱包来启动你的 Fiber 节点。",
-    createWallet: "创建钱包",
-    importWallet: "导入钱包",
-    continue: "继续",
-    back: "返回",
-    backupTitle: "备份你的钱包",
-    backupBody:
-      "这 12 个单词是恢复此钱包的唯一方式。Fiber Wallet UX Kit 无法替你找回它们。",
-    backupConfirmOne: "我已经离线写下这 12 个单词。",
-    backupConfirmTwo:
-      "我明白任何拿到这些单词的人都能控制这个钱包。",
-    backupConfirmThree:
-      "我明白如果丢失这些单词，Fiber Wallet UX Kit 无法帮我恢复。",
-    importTitle: "导入钱包",
-    importBody: "粘贴或输入你的 12 个单词钱包以继续。",
-    importLabel: "12 个单词助记词",
-    pasteHint: "可以直接粘贴完整助记词，或逐个单词仔细输入。",
-    encryptTitle: "保护这个浏览器",
-    encryptBody: "设置一个本地密码，用来加密存储在当前浏览器中的钱包。",
-    password: "本地钱包密码",
-    confirmPassword: "确认密码",
-    saveWallet: "保存钱包",
-    unlockTitle: "解锁钱包",
-    unlockBody: "输入密码以解锁本地钱包并启动 Fiber 节点。",
-    unlockButton: "解锁并启动节点",
-  },
   dashboard: {
     title: "仪表盘",
     fiberNode: "Fiber 节点",

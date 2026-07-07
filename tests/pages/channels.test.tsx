@@ -1,5 +1,5 @@
 import React from "react";
-import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useI18n } from "@/lib/i18n/useI18n";
 
@@ -134,17 +134,18 @@ describe("ChannelsPage", () => {
 
   it("renders locale-specific single-peer channel labels through the real locale layout", async () => {
     await renderChannelsWithLocaleLayout("zh");
-    const pageMain = screen.getByRole("main");
 
     expect(
       await screen.findByRole("heading", { level: 1, name: "通道" }),
     ).toBeInTheDocument();
-    expect(within(pageMain).getByRole("button", { name: "打开通道" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "打开通道" }),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { level: 2, name: "通道列表" }),
     ).toBeInTheDocument();
 
-    fireEvent.click(within(pageMain).getByRole("button", { name: "打开通道" }));
+    fireEvent.click(screen.getByRole("button", { name: "打开通道" }));
 
     expect(
       screen.getByText("默认连接节点"),
@@ -161,10 +162,11 @@ describe("ChannelsPage", () => {
     expect(
       await screen.findByRole("heading", { level: 1, name: "Channels" }),
     ).toBeInTheDocument();
-    const pageMainEn = screen.getByRole("main");
-    expect(within(pageMainEn).getByRole("button", { name: "Open Channel" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Open Channel" }),
+    ).toBeInTheDocument();
 
-    fireEvent.click(within(pageMainEn).getByRole("button", { name: "Open Channel" }));
+    fireEvent.click(screen.getByRole("button", { name: "Open Channel" }));
 
     expect(
       screen.getByText("Default Connected Peer"),
@@ -193,10 +195,9 @@ describe("ChannelsPage", () => {
 
   it("requires the funding amount to be at least 600 CKB", async () => {
     await renderChannelsWithLocaleLayout("en");
-    const pageMain = screen.getByRole("main");
 
-    fireEvent.click(within(pageMain).getByRole("button", { name: "Open Channel" }));
-    fireEvent.change(screen.getByLabelText("Funding Amount (CKB)"), {
+    fireEvent.click(screen.getByRole("button", { name: "Open Channel" }));
+    fireEvent.change(screen.getByPlaceholderText("e.g. 600"), {
       target: { value: "599" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Open & Fund Channel" }));
@@ -216,17 +217,5 @@ describe("ChannelsPage", () => {
         "Wait for fiber.nervosscan.com to connect before using this page.",
       ),
     ).toBeInTheDocument();
-  });
-
-  it("keeps the mobile FAB action label aligned with form toggle state", async () => {
-    await renderChannelsWithLocaleLayout("en");
-    const pageMain = screen.getByRole("main");
-
-    expect(screen.getAllByRole("button", { name: "Open Channel" }).length).toBeGreaterThanOrEqual(2);
-
-    fireEvent.click(within(pageMain).getByRole("button", { name: "Open Channel" }));
-
-    expect(screen.getByLabelText("Funding Amount (CKB)")).toBeInTheDocument();
-    expect(screen.getAllByRole("button", { name: "Cancel" }).length).toBeGreaterThanOrEqual(2);
   });
 });

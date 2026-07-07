@@ -1,63 +1,154 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { render, screen, within } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import ConnectWallet from "@/components/ConnectWallet";
+import Navigation from "@/components/Navigation";
+import { zh } from "@/lib/i18n/messages/zh";
+import { I18nProvider } from "@/lib/i18n/provider";
+import { useI18n } from "@/lib/i18n/useI18n";
 
-vi.mock("next/navigation", () => ({
-  usePathname: () => "/zh",
+const { openWalletMock, pathnameState } = vi.hoisted(() => ({
+  openWalletMock: vi.fn(),
+  pathnameState: {
+    current: "/zh/channels",
+  },
 }));
 
-vi.mock("@/lib/i18n/useI18n", () => ({
-  useI18n: () => ({
-    locale: "zh",
-    hasProvider: true,
-    t: (key: string) =>
-      ({
-        "nav.dashboard": "仪表盘",
-        "nav.channels": "通道",
-        "nav.invoices": "发票",
-        "nav.payments": "支付",
-        "nav.languageChinese": "中文",
-        "nav.languageEnglish": "English",
-        "nav.defaultPeer": "默认节点",
-        "nav.connected": "已连接",
-        "nav.connecting": "连接中",
-        "nav.offline": "离线",
-        "nav.statusIdle": "空闲",
-        "nav.statusStarting": "启动中",
-        "nav.statusRunning": "运行中",
-        "nav.statusStopped": "已停止",
-        "nav.statusError": "错误",
-        "app.testnet": "测试网",
-      }[key] ?? key),
-  }),
+vi.mock("next/navigation", () => ({
+  usePathname: () => pathnameState.current,
 }));
 
 vi.mock("@/lib/fiberContext", () => ({
   useFiber: () => ({
-    status: "idle",
-    defaultPeerConnected: false,
+    status: "running",
+    defaultPeerConnected: true,
   }),
 }));
 
-describe("DesktopIconRail", () => {
-  it("exposes icon-only links through accessible labels", async () => {
-    const { default: DesktopIconRail } = await import("@/components/shell/DesktopIconRail");
-    render(<DesktopIconRail />);
+vi.mock("@ckb-ccc/connector-react", () => ({
+  ccc: {
+    useCcc: () => ({
+      open: openWalletMock,
+      wallet: null,
+    }),
+    useSigner: () => undefined,
+    fixedPointToString: (value: string | number | bigint) => String(value),
+  },
+}));
 
-    expect(screen.getByLabelText("仪表盘")).toHaveAttribute("aria-current", "page");
-    expect(screen.getByLabelText("通道")).toBeInTheDocument();
-    expect(screen.getByLabelText("发票")).toBeInTheDocument();
-    expect(screen.getByLabelText("支付")).toBeInTheDocument();
+function FallbackI18nProbe() {
+  const { hasProvider, locale, t } = useI18n({ fallback: "en" });
+
+  return (
+    <>
+      <span data-testid="fallback-provider">{String(hasProvider)}</span>
+      <span data-testid="fallback-locale">{locale}</span>
+      <span data-testid="fallback-label">{t("nav.dashboard")}</span>
+    </>
+  );
+}
+
+function StrictI18nProbe() {
+  useI18n();
+
+  return null;
+}
+
+describe("Navigation", () => {
+  beforeEach(() => {
+    pathnameState.current = "/zh/channels";
+    openWalletMock.mockReset();
+  });
+
+  it("renders translated labels and a language switcher", () => {
+    render(
+      <I18nProvider locale="zh" messages={zh}>
+        <Navigation />
+      </I18nProvider>,
+    );
+
+    const mobileNav = screen.getByRole("navigation", { name: "移动导航" });
+    const desktopLinks = screen.getAllByRole("link", { name: "仪表盘" });
+    const mobileLinks = within(mobileNav).getAllByRole("link");
+
+    expect(desktopLinks).toHaveLength(2);
+    expect(mobileLinks).toHaveLength(4);
+    expect(screen.getByText("中文")).toBeInTheDocument();
+    expect(screen.getByText("English")).toBeInTheDocument();
+    expect(screen.getByText("测试网")).toBeInTheDocument();
+    expect(within(mobileNav).getByRole("link", { name: "仪表盘" })).toHaveAttribute(
+      "href",
+      "/zh",
+    );
+    expect(within(mobileNav).getByRole("link", { name: "通道" })).toHaveAttribute(
+      "href",
+      "/zh/channels",
+    );
+    expect(screen.getByRole("link", { name: "English" })).toHaveAttribute(
+      "href",
+      "/en/channels",
+    );
+  });
+
+  it("falls back to English labels without generating locale-prefixed legacy links", () => {
+    pathnameState.current = "/channels";
+
+    render(<Navigation />);
+
+    const mobileNav = screen.getByRole("navigation", { name: "Mobile navigation" });
+
+    expect(screen.getAllByRole("link", { name: "Dashboard" })).toHaveLength(2);
+    expect(screen.getAllByRole("link", { name: "Channels" })).toHaveLength(2);
+    expect(screen.getByText("中文")).toBeInTheDocument();
+    expect(screen.getByText("English")).toBeInTheDocument();
+    expect(screen.getByText("Testnet")).toBeInTheDocument();
+    expect(within(mobileNav).getByRole("link", { name: "Dashboard" })).toHaveAttribute(
+      "href",
+      "/",
+    );
+    expect(within(mobileNav).getByRole("link", { name: "Channels" })).toHaveAttribute(
+      "href",
+      "/channels",
+    );
+    expect(screen.queryByRole("link", { name: "中文" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: "English" }),
+    ).not.toBeInTheDocument();
   });
 });
 
-describe("TopUtilityBar", () => {
-  it("does not append the default peer host when the peer is disconnected", async () => {
-    const { default: TopUtilityBar } = await import("@/components/shell/TopUtilityBar");
+describe("ConnectWallet", () => {
+  it("falls back to the English connect label without an I18nProvider", () => {
+    render(<ConnectWallet />);
 
-    render(<TopUtilityBar />);
+    expect(
+      screen.getByRole("button", { name: "Connect Wallet" }),
+    ).toBeInTheDocument();
+  });
+});
 
-    expect(screen.getByText("空闲")).toBeInTheDocument();
-    expect(screen.queryByText(/fiber\.nervosscan\.com/)).not.toBeInTheDocument();
+describe("useI18n", () => {
+  it("still throws by default outside the provider", () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    try {
+      expect(() => render(<StrictI18nProbe />)).toThrow(
+        "useI18n must be used within an I18nProvider",
+      );
+    } finally {
+      consoleErrorSpy.mockRestore();
+    }
+  });
+
+  it("supports explicit English fallback outside the provider", () => {
+    render(<FallbackI18nProbe />);
+
+    expect(screen.getByTestId("fallback-provider")).toHaveTextContent("false");
+    expect(screen.getByTestId("fallback-locale")).toHaveTextContent("en");
+    expect(screen.getByTestId("fallback-label")).toHaveTextContent(
+      "Dashboard",
+    );
   });
 });

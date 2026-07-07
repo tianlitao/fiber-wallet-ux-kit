@@ -1,5 +1,5 @@
 import React from "react";
-import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { fiberState, pathnameState } = vi.hoisted(() => ({
@@ -83,15 +83,14 @@ describe("Mobile invoices page", () => {
     });
 
     await renderWithLocaleLayout("zh");
-    const pageMain = screen.getByRole("main");
 
-    fireEvent.change(screen.getByLabelText("金额（CKB）"), {
+    fireEvent.change(screen.getByPlaceholderText("例如 1"), {
       target: { value: " 1.5 " },
     });
-    fireEvent.change(screen.getByLabelText("描述（可选）"), {
+    fireEvent.change(screen.getByPlaceholderText("这张发票是做什么的？"), {
       target: { value: "测试收款" },
     });
-    fireEvent.click(within(pageMain).getByRole("button", { name: "创建发票" }));
+    fireEvent.click(screen.getByRole("button", { name: "创建发票" }));
 
     expect(fiberState.fiber.newInvoice).toHaveBeenCalledTimes(1);
     expect(fiberState.fiber.newInvoice).toHaveBeenCalledWith(

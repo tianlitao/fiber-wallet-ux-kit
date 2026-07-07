@@ -30,7 +30,7 @@ Fiber Wallet UX Kit packages those integration patterns into a runnable Next.js 
 - Invoice creation, parsing, lookup, QR display, and large QR modal.
 - Payment send, keysend, status polling, scan-to-pay, and recent activity storage.
 - Cloudflare Pages static export with required COOP/COEP headers.
-- Vitest coverage for i18n, onboarding, Fiber context, JoyID bridge, channel resume, invoices, payments, and mobile flows.
+- Vitest coverage for i18n, dashboard identity-wallet flows, Fiber context, JoyID bridge, channel resume, invoices, payments, and mobile flows.
 
 ## Demo flow
 

@@ -31,8 +31,6 @@ function Harness() {
 }
 
 describe("FiberProvider", () => {
-  const originalSharedArrayBuffer = globalThis.SharedArrayBuffer;
-
   beforeEach(() => {
     startMock.mockReset();
     stopMock.mockReset();
@@ -50,10 +48,6 @@ describe("FiberProvider", () => {
     stopMock.mockResolvedValue(undefined);
     connectPeerMock.mockResolvedValue(undefined);
     listPeersMock.mockResolvedValue({ peers: [] });
-    Object.defineProperty(globalThis, "SharedArrayBuffer", {
-      configurable: true,
-      value: originalSharedArrayBuffer,
-    });
   });
 
   it("starts Fiber from a supplied identity key", async () => {
@@ -75,23 +69,5 @@ describe("FiberProvider", () => {
     });
 
     expect(screen.getByText("running")).toBeInTheDocument();
-  });
-
-  it("fails early with a helpful error when SharedArrayBuffer is unavailable", async () => {
-    Object.defineProperty(globalThis, "SharedArrayBuffer", {
-      configurable: true,
-      value: undefined,
-    });
-
-    render(
-      <FiberProvider>
-        <Harness />
-      </FiberProvider>,
-    );
-
-    await waitFor(() => {
-      expect(startMock).not.toHaveBeenCalled();
-      expect(screen.getByText("error")).toBeInTheDocument();
-    });
   });
 });

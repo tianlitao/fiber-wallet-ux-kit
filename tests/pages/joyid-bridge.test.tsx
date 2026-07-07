@@ -38,7 +38,7 @@ describe("JoyIdBridgePage", () => {
         payload: {
           config: {
             redirectURL: "/en",
-            name: "Fiber Wallet",
+            name: "Fiber Wallet UX Kit",
             logo: "icon",
           },
         },
@@ -84,7 +84,7 @@ describe("JoyIdBridgePage", () => {
         payload: {
           config: {
             redirectURL: "/en",
-            name: "Fiber Wallet",
+            name: "Fiber Wallet UX Kit",
             logo: "icon",
           },
         },
@@ -98,7 +98,7 @@ describe("JoyIdBridgePage", () => {
     await waitFor(() => {
       expect(authWithPopupMock).toHaveBeenCalledWith(
         expect.objectContaining({
-          name: "Fiber Wallet",
+          name: "Fiber Wallet UX Kit",
         }),
       );
     });
@@ -132,7 +132,7 @@ describe("JoyIdBridgePage", () => {
         payload: {
           config: {
             redirectURL: "/en",
-            name: "Fiber Wallet",
+            name: "Fiber Wallet UX Kit",
             logo: "icon",
           },
         },
@@ -165,7 +165,7 @@ describe("JoyIdBridgePage", () => {
         payload: {
           config: {
             redirectURL: "/en",
-            name: "Fiber Wallet",
+            name: "Fiber Wallet UX Kit",
             logo: "icon",
           },
         },
@@ -208,7 +208,7 @@ describe("JoyIdBridgePage", () => {
           witnessIndexes: [0],
           config: {
             redirectURL: "/en/channels",
-            name: "Fiber Wallet",
+            name: "Fiber Wallet UX Kit",
             logo: "icon",
           },
         },
@@ -261,7 +261,7 @@ describe("JoyIdBridgePage", () => {
           witnessIndexes: [0],
           config: {
             redirectURL: "/en/channels",
-            name: "Fiber Wallet",
+            name: "Fiber Wallet UX Kit",
             logo: "icon",
           },
         },

@@ -5,8 +5,8 @@ import { useState, useEffect, useCallback } from "react";
 import { useFiber } from "@/lib/fiberContext";
 import { ckbToShannons, shannonsToDisplay, DEFAULT_PEER_PUBKEY, DEFAULT_PEER_ADDRESS } from "@/lib/fiberConfig";
 import { truncateAddress } from "@/utils/stringUtils";
+import Navigation from "@/components/Navigation";
 import ConnectWallet from "@/components/ConnectWallet";
-import WalletShell from "@/components/shell/WalletShell";
 import { ccc } from "@ckb-ccc/connector-react";
 import type { Channel, ListChannelsResult } from "@nervosnetwork/fiber-js";
 import { useI18n } from "@/lib/i18n/useI18n";
@@ -116,47 +116,44 @@ export default function ChannelsPage() {
 
   if (status !== "running") {
     return (
-      <WalletShell walletSlot={<ConnectWallet />}>
-        <div className="mx-auto px-0 py-0">
+      <div className="min-h-screen">
+        <Navigation />
+        <div className="max-w-6xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-3xl font-semibold tracking-tight">{t("channelsPage.title")}</h1>
+            <h1 className="text-2xl font-bold">{t("channelsPage.title")}</h1>
+            <ConnectWallet />
           </div>
           <div className="rounded-xl bg-[#1a1a1a] border border-white/10 p-6 text-center text-white/40">
             {t("channelsPage.startNodeFirst")}
           </div>
         </div>
-      </WalletShell>
+      </div>
     );
   }
 
   if (!defaultPeerConnected) {
     return (
-      <WalletShell walletSlot={<ConnectWallet />}>
-        <div className="mx-auto px-0 py-0">
+      <div className="min-h-screen">
+        <Navigation />
+        <div className="max-w-6xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-3xl font-semibold tracking-tight">{t("channelsPage.title")}</h1>
+            <h1 className="text-2xl font-bold">{t("channelsPage.title")}</h1>
+            <ConnectWallet />
           </div>
           <div className="rounded-xl bg-[#1a1a1a] border border-white/10 p-6 text-center text-white/40">
             {t("channelsPage.defaultPeerRequired")}
           </div>
         </div>
-      </WalletShell>
+      </div>
     );
   }
 
   return (
-    <WalletShell
-      walletSlot={<ConnectWallet />}
-      fab={{
-        mobileLabel: showOpenForm
-          ? t("channelsPage.cancel")
-          : t("channelsPage.openChannel"),
-        onClick: () => setShowOpenForm((value) => !value),
-      }}
-    >
-      <div className="mx-auto px-0 py-0">
+    <div className="min-h-screen">
+      <Navigation />
+      <div className="max-w-6xl mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-semibold tracking-tight">{t("channelsPage.title")}</h1>
+          <h1 className="text-2xl font-bold">{t("channelsPage.title")}</h1>
           <div className="flex items-center gap-3">
             <button
               onClick={() => setShowOpenForm(!showOpenForm)}
@@ -166,6 +163,7 @@ export default function ChannelsPage() {
                 ? t("channelsPage.cancel")
                 : t("channelsPage.openChannel")}
             </button>
+            <ConnectWallet />
           </div>
         </div>
 
@@ -220,7 +218,7 @@ export default function ChannelsPage() {
           )}
         </div>
       </div>
-    </WalletShell>
+    </div>
   );
 }
 
@@ -292,7 +290,6 @@ function OpenChannelForm({
   onSuccess: () => void;
 }) {
   const { locale, t } = useI18n();
-  const fundingAmountInputId = "channel-funding-amount";
   const [amount, setAmount] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
@@ -601,11 +598,8 @@ function OpenChannelForm({
         </div>
 
         <div>
-          <label htmlFor={fundingAmountInputId} className="block text-sm text-white/60 mb-1">
-            {t("channelsPage.fundingAmount")}
-          </label>
+          <label className="block text-sm text-white/60 mb-1">{t("channelsPage.fundingAmount")}</label>
           <input
-            id={fundingAmountInputId}
             type="text"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}

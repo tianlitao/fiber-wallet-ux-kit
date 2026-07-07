@@ -28,7 +28,7 @@ describe("joyid bridge storage", () => {
       payload: {
         config: {
           redirectURL: "/en",
-          name: "Fiber Wallet",
+          name: "Fiber Wallet UX Kit",
           logo: "icon",
         },
       },
@@ -41,7 +41,7 @@ describe("joyid bridge storage", () => {
       payload: {
         config: {
           redirectURL: "/en",
-          name: "Fiber Wallet",
+          name: "Fiber Wallet UX Kit",
           logo: "icon",
         },
       },
@@ -62,7 +62,7 @@ describe("joyid bridge storage", () => {
         witnessIndexes: [0],
         config: {
           redirectURL: "/en/channels",
-          name: "Fiber Wallet",
+          name: "Fiber Wallet UX Kit",
           logo: "icon",
         },
       },
@@ -79,7 +79,7 @@ describe("joyid bridge storage", () => {
         witnessIndexes: [0],
         config: {
           redirectURL: "/en/channels",
-          name: "Fiber Wallet",
+          name: "Fiber Wallet UX Kit",
           logo: "icon",
         },
       },
@@ -105,7 +105,7 @@ describe("joyid bridge storage", () => {
         payload: {
           config: {
             redirectURL: "/en",
-            name: "Fiber Wallet",
+            name: "Fiber Wallet UX Kit",
           },
         },
         createdAt: 3,
@@ -142,7 +142,7 @@ describe("joyid bridge storage", () => {
       payload: {
         config: {
           redirectURL: "/en",
-          name: "Fiber Wallet",
+          name: "Fiber Wallet UX Kit",
           logo: "icon",
         },
       },
