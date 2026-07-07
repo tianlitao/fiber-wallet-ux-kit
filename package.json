@@ -9,14 +9,15 @@
     "lint": "next lint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "pages:deploy": "npx wrangler pages deploy out --project-name fiber-wallet-ux-kit"
+    "pages:deploy": "npx wrangler pages deploy out --project-name fiber-wallet-ux-kit",
+    "worker:deploy": "npx wrangler deploy"
   },
   "dependencies": {
     "@ckb-ccc/connector-react": "^1.0.0",
     "@nervosnetwork/fiber-js": "^0.8.0-rc1",
     "@scure/bip39": "^2.0.1",
     "jsqr": "^1.4.0",
-    "next": "14.2.18",
+    "next": "14.2.35",
     "qrcode.react": "^4.2.0",
     "react": "^18",
     "react-dom": "^18"
@@ -28,7 +29,7 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "eslint": "^8",
-    "eslint-config-next": "14.2.18",
+    "eslint-config-next": "14.2.35",
     "jsdom": "^25.0.1",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",

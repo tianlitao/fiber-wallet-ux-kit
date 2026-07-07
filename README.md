@@ -91,12 +91,24 @@ npm run build
 
 ## Cloudflare Pages deployment
 
-Build and deploy:
+This project is configured as a static Next.js export. The build output is `out/`, not `.next/`.
+
+Recommended Cloudflare Pages settings:
+
+```text
+Build command: npm run build
+Build output directory: out
+Deploy command: leave empty
+```
+
+Manual Pages deploy:
 
 ```bash
 npm run build
 npx wrangler pages deploy out --project-name fiber-wallet-ux-kit
 ```
+
+If your Cloudflare project is configured to run `npx wrangler deploy`, the repository includes `wrangler.toml` with `out/` configured as static assets.
 
 ## Why `public/_headers` matters
 
