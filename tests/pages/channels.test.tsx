@@ -7,6 +7,7 @@ const { fiberState, pathnameState, signerState } = vi.hoisted(() => ({
   fiberState: {
     fiber: {
       listChannels: vi.fn(),
+      shutdownChannel: vi.fn(),
     },
     status: "running",
     error: null,
@@ -121,6 +122,8 @@ describe("ChannelsPage", () => {
     fiberState.defaultPeerConnected = true;
     fiberState.fiber.listChannels.mockReset();
     fiberState.fiber.listChannels.mockResolvedValue({ channels: [] });
+    fiberState.fiber.shutdownChannel.mockReset();
+    fiberState.fiber.shutdownChannel.mockResolvedValue({});
     signerState.isConnected.mockReset();
     signerState.getAddresses.mockReset();
     signerState.getRecommendedAddress.mockReset();
@@ -216,5 +219,97 @@ describe("ChannelsPage", () => {
         "Wait for fiber.nervosscan.com to connect before using this page.",
       ),
     ).toBeInTheDocument();
+  });
+
+  it("shows a friendly stale-channel hint when closing a missing channel", async () => {
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
+    fiberState.fiber.listChannels.mockResolvedValue({
+      channels: [
+        {
+          channel_id: "0xaafee7e3b6fe16ea7e27bbc4270247a47b288399bd6b6b279214502396ae816a",
+          pubkey: "0xpeer",
+          is_public: true,
+          local_balance: "60000000000",
+          remote_balance: "0",
+          state: { state_name: "ChannelReady" },
+        },
+      ],
+    });
+    fiberState.fiber.shutdownChannel.mockRejectedValue(
+      new Error(
+        "Channel not found error: Hash256(0xaafee7e3b6fe16ea7e27bbc4270247a47b288399bd6b6b279214502396ae816a)",
+      ),
+    );
+
+    await renderChannelsWithLocaleLayout("zh");
+
+    fireEvent.click(screen.getByRole("button", { name: "关闭" }));
+
+    await waitFor(() => {
+      expect(alertSpy).toHaveBeenCalledWith(
+        "通道可能已经关闭，或本地通道列表已过期。请刷新通道列表后再试。",
+      );
+    });
+
+    alertSpy.mockRestore();
+  });
+
+  it("shows a friendly broadcast hint when a close transaction cannot be resolved", async () => {
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
+    fiberState.fiber.listChannels.mockResolvedValue({
+      channels: [
+        {
+          channel_id: "0x0f19e629de9fbe2fe895f8d426717ca5ab686c8a2167f36de5b72d5b3cf29184",
+          pubkey: "0xpeer",
+          is_public: true,
+          local_balance: "60000000000",
+          remote_balance: "0",
+          state: { state_name: "ChannelReady" },
+        },
+      ],
+    });
+    fiberState.fiber.shutdownChannel.mockRejectedValue(
+      new Error(
+        "TransactionFailedToResolve: Resolve failed Unknown(OutPoint(0x5a5288769cecde6451cb5d301416c297a6da43dc3ac2f3253542b4082478b19b00000000))",
+      ),
+    );
+
+    await renderChannelsWithLocaleLayout("zh");
+
+    fireEvent.click(screen.getByRole("button", { name: "关闭" }));
+
+    await waitFor(() => {
+      expect(alertSpy).toHaveBeenCalledWith(
+        "通道关闭流程已发起，但关闭交易暂时无法广播，CKB 节点未能解析通道引用的链上输入。请确认节点已同步，稍后刷新通道列表。",
+      );
+    });
+
+    alertSpy.mockRestore();
+  });
+
+  it("hides close actions for shutdown-state channels", async () => {
+    fiberState.fiber.listChannels.mockResolvedValue({
+      channels: [
+        {
+          channel_id: "0x0f19e629de9fbe2fe895f8d426717ca5ab686c8a2167f36de5b72d5b3cf29184",
+          pubkey: "0xpeer",
+          is_public: true,
+          local_balance: "60000000000",
+          remote_balance: "0",
+          state: { state_name: "ChannelShutdown" },
+        },
+      ],
+    });
+
+    await renderChannelsWithLocaleLayout("zh");
+
+    expect(screen.getByText("ChannelShutdown")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "关闭" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "强制关闭" }),
+    ).not.toBeInTheDocument();
+    expect(fiberState.fiber.shutdownChannel).not.toHaveBeenCalled();
   });
 });

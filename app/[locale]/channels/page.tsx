@@ -11,6 +11,40 @@ import { ccc } from "@ckb-ccc/connector-react";
 import type { Channel, ListChannelsResult } from "@nervosnetwork/fiber-js";
 import { useI18n } from "@/lib/i18n/useI18n";
 
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (
+    error &&
+    typeof error === "object" &&
+    "message" in error &&
+    typeof error.message === "string"
+  ) {
+    return error.message;
+  }
+
+  return String(error);
+}
+
+function isChannelNotFoundError(error: unknown) {
+  return getErrorMessage(error).toLowerCase().includes("channel not found");
+}
+
+function isCloseTransactionResolveError(error: unknown) {
+  const message = getErrorMessage(error).toLowerCase();
+
+  return (
+    message.includes("transactionfailedtoresolve") ||
+    (message.includes("resolve failed") && message.includes("unknown(outpoint"))
+  );
+}
+
+function isChannelClosingOrClosedState(stateName: string) {
+  return stateName.includes("Closed") || stateName.includes("Shutdown");
+}
+
 export default function ChannelsPage() {
   const { fiber, status, defaultPeerConnected } = useFiber();
   const signer = ccc.useSigner();
@@ -287,10 +321,14 @@ function OpenChannelForm({
       try {
         const existingChannels = await fiber.listChannels({});
         const pendingWithPeer = existingChannels.channels.filter(
-          (ch: any) => ch.pubkey === DEFAULT_PEER_PUBKEY &&
-            !ch.state.state_name.includes("Closed") &&
-            !ch.state.state_name.includes("Normal") &&
-            !ch.state.state_name.includes("Ready")
+          (ch: any) => {
+            const stateName = ch.state.state_name;
+
+            return ch.pubkey === DEFAULT_PEER_PUBKEY &&
+              !isChannelClosingOrClosedState(stateName) &&
+              !stateName.includes("Normal") &&
+              !stateName.includes("Ready");
+          },
         );
         if (pendingWithPeer.length > 0) {
           console.warn("Found pending channels with this peer:", pendingWithPeer);
@@ -528,11 +566,13 @@ function ChannelCard({ channel, fiber, onClose }: { channel: Channel; fiber: any
   const [closing, setClosing] = useState(false);
   const formatLabeledValue = (labelKey: string, value: string | number) =>
     [t(labelKey), value].filter((part) => String(part).length > 0).join(" ");
+  const stateName = channel.state.state_name;
+  const isClosingOrClosed = isChannelClosingOrClosedState(stateName);
 
   const stateColor =
-    channel.state.state_name.includes("Ready") || channel.state.state_name.includes("Normal")
+    stateName.includes("Ready") || stateName.includes("Normal")
       ? "text-green-400"
-      : channel.state.state_name.includes("Closed") || channel.state.state_name.includes("Shutdown")
+      : isClosingOrClosed
         ? "text-red-400"
         : "text-yellow-400";
 
@@ -542,7 +582,15 @@ function ChannelCard({ channel, fiber, onClose }: { channel: Channel; fiber: any
       await fiber.shutdownChannel({ channel_id: channel.channel_id, force });
       onClose();
     } catch (e: any) {
-      alert(formatLabeledValue("channelsPage.closeChannelError", e?.message || String(e)));
+      if (isChannelNotFoundError(e)) {
+        alert(t("channelsPage.closeChannelNotFoundHint"));
+        onClose();
+      } else if (isCloseTransactionResolveError(e)) {
+        alert(t("channelsPage.closeChannelBroadcastResolveHint"));
+        onClose();
+      } else {
+        alert(formatLabeledValue("channelsPage.closeChannelError", getErrorMessage(e)));
+      }
     }
     setClosing(false);
   };
@@ -552,7 +600,7 @@ function ChannelCard({ channel, fiber, onClose }: { channel: Channel; fiber: any
       <div className="flex items-start justify-between">
         <div className="space-y-1 flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className={`text-xs font-medium ${stateColor}`}>{channel.state.state_name}</span>
+            <span className={`text-xs font-medium ${stateColor}`}>{stateName}</span>
             {channel.is_public && <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400">{t("channelsPage.public")}</span>}
           </div>
           <div className="text-xs text-white/40 font-mono break-all">
@@ -573,7 +621,7 @@ function ChannelCard({ channel, fiber, onClose }: { channel: Channel; fiber: any
           </div>
         </div>
       </div>
-      {!channel.state.state_name.includes("Closed") && (
+      {!isClosingOrClosed && (
         <div className="flex gap-2 mt-3 pt-3 border-t border-white/5">
           <button
             onClick={() => handleShutdown(false)}

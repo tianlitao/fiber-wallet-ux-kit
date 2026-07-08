@@ -95,6 +95,10 @@ export const zh: Messages = {
     closeChannel: "关闭",
     forceClose: "强制关闭",
     closeChannelError: "关闭通道失败：",
+    closeChannelNotFoundHint:
+      "通道可能已经关闭，或本地通道列表已过期。请刷新通道列表后再试。",
+    closeChannelBroadcastResolveHint:
+      "通道关闭流程已发起，但关闭交易暂时无法广播，CKB 节点未能解析通道引用的链上输入。请确认节点已同步，稍后刷新通道列表。",
     errorPrefix: "错误：",
     walletRequiredError: "请先连接你的 CKB 钱包。",
     missingAmountError: "请填写注资金额。",

@@ -99,6 +99,10 @@ const enMessages = {
     closeChannel: "Close",
     forceClose: "Force Close",
     closeChannelError: "Failed to close channel:",
+    closeChannelNotFoundHint:
+      "This channel may already be closed, or the local channel list is stale. Refresh the channel list and try again.",
+    closeChannelBroadcastResolveHint:
+      "The channel close has started, but the close transaction could not be broadcast because the CKB node could not resolve a referenced on-chain input. Make sure the node is synced, then refresh the channel list.",
     errorPrefix: "Error:",
     walletRequiredError: "Connect your CKB wallet first.",
     missingAmountError: "Please fill in the funding amount.",
