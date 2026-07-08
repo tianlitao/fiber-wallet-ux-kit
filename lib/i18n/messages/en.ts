@@ -129,11 +129,6 @@ const enMessages = {
     abortFundingReasonVersion:
       "3. The peer version is incompatible",
     originalError: "Original error:",
-    joyIdRedirectSigningUnsupported:
-      "JoyID can connect on this isolated Fiber page, but channel-funding signatures still need a non-popup wallet for now.",
-    channelFundedAfterJoyIdRedirect: "Channel funded after JoyID redirect.",
-    joyIdRedirectResumeFailed:
-      "Failed to finish channel funding after returning from JoyID. Please try again.",
   },
   invoicesPage: {
     title: "Invoices",

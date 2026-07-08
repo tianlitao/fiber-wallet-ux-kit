@@ -5,16 +5,11 @@ import { ccc } from "@ckb-ccc/connector-react";
 import { CSSProperties } from "react";
 import React from "react";
 import { FiberProvider } from "@/lib/fiberContext";
-import { FiberWalletSignersController } from "@/lib/joyid/FiberWalletSignersController";
 
 export function LayoutProvider({ children }: { children: React.ReactNode }) {
   const defaultClient = React.useMemo(() => {
     return new ccc.ClientPublicTestnet();
   }, []);
-  const signersController = React.useMemo(
-    () => new FiberWalletSignersController(),
-    [],
-  );
 
   return (
     <ccc.Provider
@@ -32,7 +27,6 @@ export function LayoutProvider({ children }: { children: React.ReactNode }) {
           "--tip-color": "#666",
         } as CSSProperties,
       }}
-      signersController={signersController}
       defaultClient={defaultClient}
       clientOptions={[
         {

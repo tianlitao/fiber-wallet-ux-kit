@@ -54,21 +54,12 @@ This makes the browser experience self-contained while preserving a clear recove
 6. Prepare and sign only the wallet-owned inputs.
 7. Restore Fiber's original transaction structure except the signed user witness.
 8. Submit the signed funding transaction back to Fiber.
-9. Resume the flow after JoyID redirect signing when possible.
 
 This flow is the most important reusable infrastructure pattern in the project because it bridges Fiber channel negotiation with external CKB wallet signing.
 
-## JoyID bridge
+## Cross-origin isolation
 
-Fiber runtime pages need `COOP/COEP` headers for `SharedArrayBuffer`. JoyID wallet flows can require redirect or popup behavior that is incompatible with isolated pages.
-
-The project uses:
-
-- `public/_headers` to isolate the main app.
-- `/joyid-bridge` to remove isolation headers for JoyID interaction.
-- `lib/joyid/bridge.ts` to persist bridge requests.
-- `lib/joyid/redirect.ts` to consume auth and signing redirect results.
-- `lib/joyid/JoyIdRedirectCkbSigner.ts` to expose a CCC-compatible signer wrapper.
+Fiber runtime pages need `COOP/COEP` headers for `SharedArrayBuffer`. The project applies those headers to all routes through `public/_headers` and relies on the standard CCC wallet connector flow.
 
 ## Invoice and payment infrastructure
 
@@ -99,8 +90,6 @@ The Vitest suite covers:
 - i18n routing and messages;
 - local Fiber identity wallet crypto and storage;
 - Fiber runtime support errors;
-- JoyID bridge request and redirect state;
-- channel funding resume behavior;
 - dashboard identity-wallet flows, channels, invoices, and payments pages;
 - mobile invoice and payment paths;
 - QR card and scanner components.

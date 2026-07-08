@@ -12,7 +12,7 @@ Fiber opens a powerful payment-channel design space, but application developers 
 - managing a local Fiber identity without requiring users to run native software;
 - opening and funding channels through an external CKB wallet;
 - showing channel readiness, peer connectivity, invoices, payments, and errors in user-facing flows;
-- handling `SharedArrayBuffer`, `COOP/COEP`, static hosting, mobile UX, and JoyID redirect constraints.
+- handling `SharedArrayBuffer`, `COOP/COEP`, static hosting, and mobile UX.
 
 Fiber Wallet UX Kit packages those integration patterns into a runnable Next.js reference implementation.
 
@@ -23,14 +23,13 @@ Fiber Wallet UX Kit packages those integration patterns into a runnable Next.js 
 - Runtime guardrails for `SharedArrayBuffer` and cross-origin isolation.
 - Local 12-word Fiber identity wallet encrypted with a browser password.
 - CKB Testnet wallet connection through `@ckb-ccc/connector-react`.
-- JoyID redirect bridge for isolated Fiber pages.
 - Default-peer channel setup flow against `fiber.nervosscan.com`.
 - External funding transaction signing through the connected CKB wallet.
 - Channel list, close, and force-close actions.
 - Invoice creation, parsing, lookup, QR display, and large QR modal.
 - Payment send, keysend, status polling, scan-to-pay, and recent activity storage.
 - Cloudflare Pages static export with required COOP/COEP headers.
-- Vitest coverage for i18n, dashboard identity-wallet flows, Fiber context, JoyID bridge, channel resume, invoices, payments, and mobile flows.
+- Vitest coverage for i18n, dashboard identity-wallet flows, Fiber context, channels, invoices, payments, and mobile flows.
 
 ## Demo flow
 
@@ -51,7 +50,6 @@ The app is intentionally structured as a frontend integration kit:
 
 - `lib/fiberContext.tsx` owns Fiber runtime lifecycle, node status, peer connection checks, and cleanup.
 - `lib/fiberIdentityWallet/*` owns mnemonic validation, password encryption, storage, and Fiber key derivation.
-- `lib/joyid/*` owns JoyID redirect and bridge state for COOP/COEP-compatible wallet flows.
 - `app/[locale]/channels/page.tsx` demonstrates external channel funding with CCC transaction signing.
 - `app/[locale]/invoices/page.tsx` demonstrates Fiber invoice creation, parsing, lookup, QR display, and local recent history.
 - `app/[locale]/payments/page.tsx` demonstrates invoice payment, keysend, scanner integration, status polling, and local recent history.
@@ -119,13 +117,12 @@ Cross-Origin-Opener-Policy: same-origin
 Cross-Origin-Embedder-Policy: require-corp
 ```
 
-The `/joyid-bridge` route deliberately removes those headers because JoyID popup/redirect wallet flows can conflict with isolated pages. The app uses that route as a compatibility bridge.
+All routes keep these headers so Fiber runtime pages stay cross-origin isolated.
 
 ## Current limitations
 
 - The default channel flow targets `fiber.nervosscan.com` on CKB Testnet.
 - Channel funding currently assumes a connected CCC-compatible CKB wallet with enough testnet CKB.
-- Some JoyID channel-funding signing paths are documented and guarded, but still require production hardening.
 - Recent invoice and payment history are stored locally in the browser.
 - Amount parsing should be hardened further before production use.
 - The project is a reusable infrastructure reference, not audited production wallet software.

@@ -33,7 +33,7 @@ The goal is to show how wallets and apps can integrate Fiber node startup, local
 - The identity wallet is local and encrypted.
 - CKB funding signatures stay with the user's connected wallet.
 - Cloudflare Pages headers enable `SharedArrayBuffer`.
-- `/joyid-bridge` handles JoyID compatibility where isolation headers conflict with wallet flows.
+- Cloudflare Pages headers keep Fiber runtime pages cross-origin isolated.
 - The project includes tests and is designed to be extracted into reusable SDK-style modules.
 
 ## Closing

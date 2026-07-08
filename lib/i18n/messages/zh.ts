@@ -120,11 +120,6 @@ export const zh: Messages = {
       "2. 对端未开启自动接受，或金额低于其最小要求",
     abortFundingReasonVersion: "3. 对端节点版本不兼容",
     originalError: "原始错误：",
-    joyIdRedirectSigningUnsupported:
-      "JoyID 现在可以在这个隔离版 Fiber 页面里完成连接，但通道注资签名暂时仍需要使用非弹窗钱包。",
-    channelFundedAfterJoyIdRedirect: "JoyID 回跳后通道已完成注资。",
-    joyIdRedirectResumeFailed:
-      "从 JoyID 返回后未能完成通道注资，请重试。",
   },
   invoicesPage: {
     title: "发票",

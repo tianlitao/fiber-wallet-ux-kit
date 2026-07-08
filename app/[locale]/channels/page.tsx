@@ -10,16 +10,6 @@ import ConnectWallet from "@/components/ConnectWallet";
 import { ccc } from "@ckb-ccc/connector-react";
 import type { Channel, ListChannelsResult } from "@nervosnetwork/fiber-js";
 import { useI18n } from "@/lib/i18n/useI18n";
-import { JOYID_REDIRECT_SIGNING_UNSUPPORTED } from "@/lib/joyid/JoyIdRedirectCkbSigner";
-import {
-  clearJoyIdFundingSession,
-  loadJoyIdFundingSession,
-  saveJoyIdFundingSession,
-} from "@/lib/joyid/fundingSession";
-import {
-  clearJoyIdRedirectSignResult,
-  loadJoyIdRedirectSignResult,
-} from "@/lib/joyid/redirect";
 
 export default function ChannelsPage() {
   const { fiber, status, defaultPeerConnected } = useFiber();
@@ -28,9 +18,6 @@ export default function ChannelsPage() {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [loading, setLoading] = useState(false);
   const [showOpenForm, setShowOpenForm] = useState(false);
-  const [resumeMessage, setResumeMessage] = useState("");
-  const [resumeMessageTone, setResumeMessageTone] =
-    useState<"error" | "info">("info");
 
   const refreshChannels = useCallback(async () => {
     if (!fiber) return;
@@ -47,72 +34,6 @@ export default function ChannelsPage() {
   useEffect(() => {
     if (fiber && status === "running") refreshChannels();
   }, [fiber, status, refreshChannels]);
-
-  useEffect(() => {
-    if (!fiber || status !== "running" || !signer || typeof window === "undefined") {
-      return;
-    }
-
-    let cancelled = false;
-
-    void (async () => {
-      try {
-        await signer.isConnected().catch(() => false);
-
-        const session = loadJoyIdFundingSession(window.localStorage);
-        const signResult = loadJoyIdRedirectSignResult(window.sessionStorage);
-
-        if (!session || !signResult) {
-          return;
-        }
-
-        const witness = signResult.tx.witnesses?.[session.userFirstIndex];
-        if (!witness) {
-          throw new Error(t("channelsPage.joyIdRedirectResumeFailed"));
-        }
-
-        const signedUserWitness =
-          (typeof witness === "string" ? witness : ccc.hexFrom(witness)) as `0x${string}`;
-        const finalWitnesses = session.originalWitnesses.map((item, index) =>
-          index === session.userFirstIndex ? signedUserWitness : item,
-        ) as `0x${string}`[];
-
-        await fiber.submitSignedFundingTx({
-          channel_id: session.channelId,
-          signed_funding_tx: {
-            ...session.unsignedFundingTx,
-            witnesses: finalWitnesses,
-          },
-        });
-
-        clearJoyIdFundingSession(window.localStorage);
-        clearJoyIdRedirectSignResult(window.sessionStorage);
-
-        if (cancelled) {
-          return;
-        }
-
-        setResumeMessageTone("info");
-        setResumeMessage(t("channelsPage.channelFundedAfterJoyIdRedirect"));
-        refreshChannels();
-      } catch (error) {
-        clearJoyIdFundingSession(window.localStorage);
-        clearJoyIdRedirectSignResult(window.sessionStorage);
-
-        if (cancelled) {
-          return;
-        }
-
-        console.error("Failed to resume JoyID funding:", error);
-        setResumeMessageTone("error");
-        setResumeMessage(t("channelsPage.joyIdRedirectResumeFailed"));
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [fiber, refreshChannels, signer, status, t]);
 
   if (status !== "running") {
     return (
@@ -166,18 +87,6 @@ export default function ChannelsPage() {
             <ConnectWallet />
           </div>
         </div>
-
-        {resumeMessage && (
-          <div
-            className={`rounded-xl border p-4 mb-6 text-sm ${
-              resumeMessageTone === "error"
-                ? "bg-red-500/10 border-red-500/20 text-red-300"
-                : "bg-green-500/10 border-green-500/20 text-green-300"
-            }`}
-          >
-            {resumeMessage}
-          </div>
-        )}
 
         {showOpenForm && (
           <OpenChannelForm
@@ -244,10 +153,9 @@ async function resolveFundingLockCellDeps(client: any, lockScript: {
     }];
   }
 
-  // Resolve cell deps for any CCC-known lock type (OmniLock, JoyID, PWLock, etc.)
+  // Resolve cell deps for common CCC-known lock types.
   const candidates = [
     ccc.KnownScript.OmniLock,
-    ccc.KnownScript.JoyId,
     ccc.KnownScript.PWLock,
     ccc.KnownScript.AnyoneCanPay,
     ccc.KnownScript.NostrLock,
@@ -289,7 +197,7 @@ function OpenChannelForm({
   signer: any;
   onSuccess: () => void;
 }) {
-  const { locale, t } = useI18n();
+  const { t } = useI18n();
   const [amount, setAmount] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
@@ -470,7 +378,7 @@ function OpenChannelForm({
       }
 
       // Use prepareTransaction to let CCC set up the correct witness format
-      // for the wallet's lock type (secp256k1=65B, OmniLock=larger, JoyID=variable).
+      // for the wallet's lock type.
       // prepareTransaction may also add cell deps — we restore the originals after.
       const savedCellDeps = unsignedTx.cell_deps.map((cd: any) =>
         ccc.CellDep.from({
@@ -493,25 +401,7 @@ function OpenChannelForm({
 
       showInfoMessage(t("channelsPage.approveSignature"));
 
-      saveJoyIdFundingSession(window.localStorage, {
-        channelId: result.channel_id,
-        unsignedFundingTx: {
-          version: unsignedTx.version,
-          cell_deps: unsignedTx.cell_deps,
-          header_deps: unsignedTx.header_deps,
-          inputs: unsignedTx.inputs,
-          outputs: unsignedTx.outputs,
-          outputs_data: unsignedTx.outputs_data,
-          witnesses: originalWitnesses,
-        },
-        originalWitnesses,
-        userFirstIndex,
-        locale,
-        createdAt: Date.now(),
-      });
-
-      // signOnlyTransaction signs using the wallet's native method
-      // (secp256k1 ECDSA, EVM personal_sign, JoyID WebAuthn, etc.)
+      // signOnlyTransaction signs using the wallet's native method.
       const signedTx = await signer.signOnlyTransaction(preparedTx);
 
       // Extract the signed witness for the user's input
@@ -564,12 +454,8 @@ function OpenChannelForm({
           ]),
         );
       } else {
-        const normalizedError =
-          errMsg === JOYID_REDIRECT_SIGNING_UNSUPPORTED
-            ? t("channelsPage.joyIdRedirectSigningUnsupported")
-            : errMsg;
         showErrorMessage(
-          formatParts([t("channelsPage.errorPrefix"), normalizedError]),
+          formatParts([t("channelsPage.errorPrefix"), errMsg]),
         );
       }
     }

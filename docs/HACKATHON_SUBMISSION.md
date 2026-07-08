@@ -2,7 +2,7 @@
 
 ## Project summary
 
-**Fiber Wallet UX Kit** is reusable browser wallet and payment UX infrastructure for CKB Fiber Network. It demonstrates how wallets and app developers can integrate Fiber node startup, local Fiber identity management, channel lifecycle flows, invoice QR flows, payment sending, mobile scan-to-pay, CKB wallet signing, and JoyID redirect compatibility in a static web app.
+**Fiber Wallet UX Kit** is reusable browser wallet and payment UX infrastructure for CKB Fiber Network. It demonstrates how wallets and app developers can integrate Fiber node startup, local Fiber identity management, channel lifecycle flows, invoice QR flows, payment sending, mobile scan-to-pay, and CKB wallet signing in a static web app.
 
 The project is a working reference kit rather than a consumer wallet product. Its purpose is to make Fiber easier to use, integrate, operate, and productize for future developers, wallets, merchants, and services.
 
@@ -35,7 +35,7 @@ Fiber developers need more than low-level APIs. They need reusable browser integ
 - How should a wallet manage a local Fiber identity?
 - How does channel funding work when CKB signing is delegated to an external wallet?
 - How should Fiber readiness, peer connectivity, channel state, invoices, payment status, and failure states appear in a wallet UI?
-- How can a static deployment satisfy `SharedArrayBuffer` isolation while still supporting JoyID redirect flows?
+- How can a static deployment satisfy `SharedArrayBuffer` isolation for browser Fiber flows?
 
 Fiber Wallet UX Kit addresses those gaps with a runnable, tested reference implementation.
 
@@ -44,7 +44,6 @@ Fiber Wallet UX Kit addresses those gaps with a runnable, tested reference imple
 - Browser Fiber node lifecycle with runtime isolation checks.
 - Local encrypted 12-word Fiber identity wallet.
 - CCC wallet connection on CKB Testnet.
-- JoyID redirect bridge state handling.
 - Default-peer channel setup flow with external funding transaction signing.
 - Channel listing and close actions.
 - Invoice creation, parsing, lookup, and QR display.

@@ -57,7 +57,6 @@ vi.mock("@ckb-ccc/connector-react", () => ({
     },
     KnownScript: {
       OmniLock: "OmniLock",
-      JoyId: "JoyId",
       PWLock: "PWLock",
       AnyoneCanPay: "AnyoneCanPay",
       NostrLock: "NostrLock",
