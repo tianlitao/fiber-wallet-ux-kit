@@ -198,6 +198,8 @@ export const zh: Messages = {
     amountPlaceholder: "例如 1",
     enterInvoiceError: "请输入发票。",
     fillAllFieldsError: "请填写所有字段。",
+    routeNotReadyHint:
+      "暂时还没有找到可用支付路径。通道和路由可能还在同步，请稍等一会儿再试。",
     sending: "发送中...",
     paymentHashLabel: "支付哈希",
     paymentHashPlaceholder: "例如 0x...",

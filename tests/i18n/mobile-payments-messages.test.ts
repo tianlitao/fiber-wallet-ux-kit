@@ -38,6 +38,12 @@ describe("mobile payment i18n messages", () => {
   });
 
   it("defines the payment scanner labels", () => {
+    expect(en.paymentsPage.routeNotReadyHint).toBe(
+      "No payment route is available yet. Channels and routing data may still be syncing. Please wait a moment and try again.",
+    );
+    expect(zh.paymentsPage.routeNotReadyHint).toBe(
+      "暂时还没有找到可用支付路径。通道和路由可能还在同步，请稍等一会儿再试。",
+    );
     expect(en.paymentsPage.scannerTitle).toBe("Scan invoice QR");
     expect(zh.paymentsPage.scannerTitle).toBe("扫描发票二维码");
     expect(en.paymentsPage.scanInvoice).toBe("Scan Invoice");

@@ -1,5 +1,5 @@
 import React from "react";
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { fiberState, pathnameState } = vi.hoisted(() => ({
@@ -81,5 +81,26 @@ describe("Mobile payments page", () => {
     fireEvent.click(screen.getByRole("button", { name: "mock-scan" }));
 
     expect(screen.getByDisplayValue("fiber-invoice-from-scan")).toBeInTheDocument();
+  });
+
+  it("shows a friendly retry hint when payment route is not ready", async () => {
+    fiberState.fiber = {
+      sendPayment: vi.fn().mockRejectedValue(
+        new Error("Send payment error: Failed to build route, PathFind error: no path found"),
+      ),
+    };
+
+    await renderPaymentsPage();
+
+    fireEvent.change(screen.getByPlaceholderText("粘贴 Fiber 发票..."), {
+      target: { value: "fibt1route-not-ready" },
+    });
+    fireEvent.click(screen.getAllByRole("button", { name: "发送支付" }).at(-1)!);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("暂时还没有找到可用支付路径。通道和路由可能还在同步，请稍等一会儿再试。"),
+      ).toBeInTheDocument();
+    });
   });
 });

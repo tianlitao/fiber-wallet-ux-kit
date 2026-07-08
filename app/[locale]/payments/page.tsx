@@ -24,6 +24,32 @@ const paymentStatusColors: Record<string, string> = {
   Failed: "bg-red-500/20 text-red-400",
 };
 
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (
+    error &&
+    typeof error === "object" &&
+    "message" in error &&
+    typeof error.message === "string"
+  ) {
+    return error.message;
+  }
+
+  return String(error);
+}
+
+function isRouteNotReadyError(error: unknown) {
+  const message = getErrorMessage(error).toLowerCase();
+
+  return (
+    message.includes("failed to build route") &&
+    (message.includes("no path found") || message.includes("pathfind error"))
+  );
+}
+
 export default function PaymentsPage() {
   const { fiber, status, defaultPeerConnected } = useFiber();
   const { t } = useI18n();
@@ -216,7 +242,11 @@ function SendPayment({
         }
       }
     } catch (e: any) {
-      setError(e?.message || String(e));
+      setError(
+        isRouteNotReadyError(e)
+          ? t("paymentsPage.routeNotReadyHint")
+          : getErrorMessage(e),
+      );
     }
 
     setSubmitting(false);

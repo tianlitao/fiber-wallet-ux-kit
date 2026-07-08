@@ -209,6 +209,8 @@ const enMessages = {
     amountPlaceholder: "e.g. 1",
     enterInvoiceError: "Please enter an invoice.",
     fillAllFieldsError: "Please fill in all fields.",
+    routeNotReadyHint:
+      "No payment route is available yet. Channels and routing data may still be syncing. Please wait a moment and try again.",
     sending: "Sending...",
     paymentHashLabel: "Payment Hash",
     paymentHashPlaceholder: "e.g. 0x...",
