@@ -52,4 +52,16 @@ describe("root locale redirect page", () => {
 
     expect(screen.getByText(/loading/i)).toBeInTheDocument();
   });
+
+  it("renders the root not-found page used by Next dev error fallback", async () => {
+    const { default: NotFoundPage } = await import("@/app/not-found");
+
+    render(<NotFoundPage />);
+
+    expect(screen.getByRole("heading", { name: "Page not found" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open English app" })).toHaveAttribute(
+      "href",
+      "/en",
+    );
+  });
 });

@@ -1,6 +1,18 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import {
+  PHASE_DEVELOPMENT_SERVER,
+  PHASE_PRODUCTION_BUILD,
+} from "next/constants";
+
+async function loadNextConfig(phase = PHASE_PRODUCTION_BUILD) {
+  const { default: nextConfig } = await import("../../next.config.mjs");
+
+  return typeof nextConfig === "function"
+    ? nextConfig(phase, { defaultConfig: {} })
+    : nextConfig;
+}
 
 describe("Cloudflare Pages static headers", () => {
   it("defines cross-origin isolation headers for all routes", () => {
@@ -22,7 +34,7 @@ describe("Cloudflare Pages static headers", () => {
 
 describe("Next.js dev headers", () => {
   it("defines cross-origin isolation headers for local development", async () => {
-    const { default: nextConfig } = await import("../../next.config.mjs");
+    const nextConfig = await loadNextConfig(PHASE_DEVELOPMENT_SERVER);
     const headerRules = await nextConfig.headers();
     const allRouteRule = headerRules.find((rule) => rule.source === "/:path*");
 
@@ -38,5 +50,13 @@ describe("Next.js dev headers", () => {
         },
       ]),
     );
+  });
+
+  it("keeps static export for production builds but disables it for dev routing", async () => {
+    const devConfig = await loadNextConfig(PHASE_DEVELOPMENT_SERVER);
+    const productionConfig = await loadNextConfig(PHASE_PRODUCTION_BUILD);
+
+    expect(devConfig.output).toBeUndefined();
+    expect(productionConfig.output).toBe("export");
   });
 });
