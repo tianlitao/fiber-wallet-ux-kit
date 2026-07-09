@@ -43,6 +43,7 @@ Fiber Wallet UX Kit addresses those gaps with a runnable, tested reference imple
 
 - Browser Fiber node lifecycle with runtime isolation checks.
 - Local encrypted 12-word Fiber identity wallet.
+- Identity recovery through mnemonic import, with channel database portability kept out of scope for the hackathon demo.
 - CCC wallet connection on CKB Testnet.
 - Default-peer channel setup flow with external funding transaction signing.
 - Channel listing and close actions.
@@ -57,6 +58,7 @@ Fiber Wallet UX Kit addresses those gaps with a runnable, tested reference imple
 - The default peer is hardcoded to `fiber.nervosscan.com`.
 - The hackathon flow targets CKB Testnet.
 - Channel funding depends on wallet support and sufficient testnet CKB.
+- The 12-word mnemonic restores the Fiber node identity, not the complete Fiber channel database. Channel state is browser-local in the Fiber runtime's IndexedDB storage.
 - Amount parsing should be replaced with strict fixed-point parsing before production use.
 - Recent activity is browser-local rather than synced or indexed.
 - The UI is a reference implementation, not an audited production wallet.
@@ -73,6 +75,7 @@ See [DEMO_SCRIPT.md](./DEMO_SCRIPT.md).
 
 - Extract reusable hooks and components for wallet/app integration.
 - Add a payment readiness module for peer, channel, route, and capacity checks.
+- Add a safe channel database backup or migration flow once the underlying Fiber recovery model is production-ready.
 - Add structured failure diagnostics and recovery flows.
 - Add merchant checkout primitives and hosted payment page examples.
 - Add multi-asset invoice and payment request support.

@@ -31,6 +31,7 @@ The goal is to show how wallets and apps can integrate Fiber node startup, local
 - This is infrastructure, not only an app UI.
 - The Fiber node runs in the browser through `@nervosnetwork/fiber-js`.
 - The identity wallet is local and encrypted.
+- The 12-word mnemonic restores the Fiber identity, while channel runtime state remains local to the browser database in this demo.
 - CKB funding signatures stay with the user's connected wallet.
 - Cloudflare Pages headers enable `SharedArrayBuffer`.
 - Cloudflare Pages headers keep Fiber runtime pages cross-origin isolated.

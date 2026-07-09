@@ -27,6 +27,7 @@ Fiber Wallet UX Kit packages those integration patterns into a runnable Next.js 
 - Browser-side Fiber node startup through `@nervosnetwork/fiber-js`.
 - Runtime guardrails for `SharedArrayBuffer` and cross-origin isolation.
 - Local 12-word Fiber identity wallet encrypted with a browser password.
+- Clear identity recovery boundary: the mnemonic restores the Fiber node identity, while channel state remains browser-local in the Fiber runtime database.
 - CKB Testnet wallet connection through `@ckb-ccc/connector-react`.
 - Default-peer channel setup flow against `fiber.nervosscan.com`.
 - External funding transaction signing through the connected CKB wallet.
@@ -55,6 +56,7 @@ The app is intentionally structured as a frontend integration kit:
 
 - `lib/fiberContext.tsx` owns Fiber runtime lifecycle, node status, peer connection checks, and cleanup.
 - `lib/fiberIdentityWallet/*` owns mnemonic validation, password encryption, storage, and Fiber key derivation.
+- `@nervosnetwork/fiber-js` persists Fiber runtime data in browser IndexedDB. This kit does not export or migrate the channel database across browsers.
 - `app/[locale]/channels/page.tsx` demonstrates external channel funding with CCC transaction signing.
 - `app/[locale]/invoices/page.tsx` demonstrates Fiber invoice creation, parsing, lookup, QR display, and local recent history.
 - `app/[locale]/payments/page.tsx` demonstrates invoice payment, keysend, scanner integration, status polling, and local recent history.
@@ -128,6 +130,7 @@ Fiber runtime routes keep these headers so the app stays cross-origin isolated. 
 
 - The default channel flow targets `fiber.nervosscan.com` on CKB Testnet.
 - Channel funding currently assumes a connected CCC-compatible CKB wallet with enough testnet CKB.
+- The 12-word mnemonic restores the local Fiber identity, not the full channel database. Existing channels depend on the browser-local Fiber IndexedDB state and are not currently portable through mnemonic import alone.
 - Recent invoice and payment history are stored locally in the browser.
 - Amount parsing should be hardened further before production use.
 - The project is a reusable infrastructure reference, not audited production wallet software.
@@ -142,6 +145,7 @@ Fiber runtime routes keep these headers so the app stays cross-origin isolated. 
 
 - Extract the wallet/payment flows into reusable React components and hooks.
 - Add a payment readiness API for capacity, peer connectivity, and route confidence checks.
+- Add a documented channel database backup or migration path after upstream Fiber recovery semantics are ready for production use.
 - Add structured payment failure diagnostics with recovery suggestions.
 - Add a developer SDK wrapper for invoice/payment intents.
 - Add richer channel health metrics and alerting hooks.

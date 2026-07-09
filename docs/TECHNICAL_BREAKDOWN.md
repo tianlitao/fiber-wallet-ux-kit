@@ -9,6 +9,7 @@ The implementation keeps the Fiber node identity separate from the CKB funding w
 - The local Fiber identity wallet is a 12-word mnemonic encrypted in browser storage.
 - The derived Fiber key starts the Fiber node.
 - The connected CCC wallet signs CKB channel funding transactions.
+- Fiber channel runtime state is persisted separately by `fiber-js` in browser IndexedDB.
 
 ## Fiber runtime lifecycle
 
@@ -40,7 +41,9 @@ Responsibilities:
 - Store the encrypted record locally.
 - Unlock the record with the user password before starting Fiber.
 
-This makes the browser experience self-contained while preserving a clear recovery model: the 12-word mnemonic is the only recovery method.
+This makes the browser identity experience self-contained while preserving a clear recovery boundary: the 12-word mnemonic is the only recovery method for the Fiber identity key. It is not a complete channel-state backup.
+
+Channel data is maintained by the Fiber runtime database in browser IndexedDB, using the `databasePrefix` passed to `fiber-js` at startup. Importing the same mnemonic in another browser derives the same Fiber node identity, but it does not migrate the original browser's channel database. This kit intentionally exposes identity creation and import semantics without claiming cross-browser channel recovery.
 
 ## CKB wallet signing and channel funding
 
@@ -110,6 +113,7 @@ The Vitest suite covers:
 
 - Replace floating-point CKB parsing with strict fixed-point string parsing.
 - Extract channel funding into a reusable hook or service.
+- Add an explicit channel database backup or migration mechanism only after the recovery and concurrency semantics are well defined.
 - Add structured Fiber error categories and recovery guidance.
 - Add route confidence and liquidity readiness checks before sending payments.
 - Add e2e tests in a real browser with `crossOriginIsolated` verification.
