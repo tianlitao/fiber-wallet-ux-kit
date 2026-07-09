@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { fiberState, pathnameState } = vi.hoisted(() => ({
   fiberState: {
-    fiber: {},
+    fiber: {} as any,
     status: "running",
     error: null,
     nodeInfo: null,

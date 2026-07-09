@@ -16,7 +16,7 @@
     "@ckb-ccc/connector-react": "^1.0.0",
     "@ckb-ccc/joy-id": "1.0.32",
     "@joyid/common": "0.2.2",
-    "@nervosnetwork/fiber-js": "^0.8.0-rc1",
+    "@nervosnetwork/fiber-js": "0.8.1",
     "@scure/bip39": "^2.0.1",
     "jsqr": "^1.4.0",
     "next": "14.2.35",
