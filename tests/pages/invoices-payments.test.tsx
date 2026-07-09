@@ -1,5 +1,5 @@
 import React from "react";
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { fiberState, pathnameState } = vi.hoisted(() => ({
@@ -188,6 +188,50 @@ describe("Invoices and Payments pages", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("成功")).toBeInTheDocument();
     expect(screen.queryByText("Success")).not.toBeInTheDocument();
+  });
+
+  it("refreshes open recent invoices from Fiber status lookups", async () => {
+    fiberState.fiber = {
+      getInvoice: vi.fn().mockResolvedValue({
+        status: "Paid",
+        invoice: {
+          currency: "Fibt",
+          amount: "180000000",
+          data: {
+            timestamp: "0x1",
+            payment_hash: "0xpaidinvoice",
+            attrs: [{ Description: "测试发票" }],
+          },
+        },
+      }),
+    };
+    window.localStorage.setItem(
+      "fiber_recent_invoices",
+      JSON.stringify([
+        {
+          paymentHash: "0xpaidinvoice",
+          status: "Open",
+          amount: "180000000",
+          invoice: "fibt1paidinvoice",
+          invoiceAddress: "fibt1paidinvoice",
+          description: "测试发票",
+          source: "create",
+          updatedAt: 1_700_000_000_000,
+        },
+      ]),
+    );
+
+    await renderWithLocaleLayout("zh", "/invoices");
+
+    await waitFor(() => {
+      expect(screen.getByText("已支付")).toBeInTheDocument();
+    });
+    expect(screen.queryByText("待支付")).not.toBeInTheDocument();
+    expect(fiberState.fiber.getInvoice).toHaveBeenCalledWith({
+      payment_hash: "0xpaidinvoice",
+    });
+    expect(screen.getAllByText("创建").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText(/fibt1paidinvoice/)).toBeInTheDocument();
   });
 
   it("renders the non-running payments fallback through the real locale layout", async () => {

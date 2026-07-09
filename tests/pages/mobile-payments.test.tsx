@@ -103,4 +103,27 @@ describe("Mobile payments page", () => {
       ).toBeInTheDocument();
     });
   });
+
+  it("shows a friendly retry hint when outbound liquidity is temporarily insufficient", async () => {
+    fiberState.fiber = {
+      sendPayment: vi.fn().mockRejectedValue({
+        code: -32000,
+        message:
+          "Send payment error: Failed to build route, Insufficient balance: max outbound liquidity 0 is insufficient, required amount: 180000000",
+      }),
+    };
+
+    await renderPaymentsPage();
+
+    fireEvent.change(screen.getByPlaceholderText("粘贴 Fiber 发票..."), {
+      target: { value: "fibt1liquidity-not-ready" },
+    });
+    fireEvent.click(screen.getAllByRole("button", { name: "发送支付" }).at(-1)!);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("暂时还没有找到可用支付路径。通道和路由可能还在同步，请稍等一会儿再试。"),
+      ).toBeInTheDocument();
+    });
+  });
 });

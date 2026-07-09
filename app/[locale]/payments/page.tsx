@@ -46,7 +46,10 @@ function isRouteNotReadyError(error: unknown) {
 
   return (
     message.includes("failed to build route") &&
-    (message.includes("no path found") || message.includes("pathfind error"))
+    (message.includes("no path found") ||
+      message.includes("pathfind error") ||
+      (message.includes("outbound liquidity") &&
+        message.includes("insufficient")))
   );
 }
 

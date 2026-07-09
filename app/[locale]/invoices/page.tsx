@@ -32,6 +32,16 @@ const invoiceStatusColors: Record<string, string> = {
   Expired: "bg-yellow-500/20 text-yellow-400",
 };
 
+const INVOICE_STATUS_REFRESH_INTERVAL_MS = 5000;
+
+function getInvoiceDescription(invoice: CkbInvoice) {
+  const description = invoice.data.attrs.find(
+    (attr): attr is { Description: string } => "Description" in attr,
+  );
+
+  return description?.Description;
+}
+
 export default function InvoicesPage() {
   const { fiber, status, defaultPeerConnected } = useFiber();
   const { t } = useI18n();
@@ -45,6 +55,70 @@ export default function InvoicesPage() {
   const refreshRecentInvoices = useCallback(() => {
     setRecentInvoices(getRecentInvoices());
   }, []);
+
+  useEffect(() => {
+    if (
+      status !== "running" ||
+      !defaultPeerConnected ||
+      typeof fiber?.getInvoice !== "function"
+    ) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const refreshOpenInvoices = async () => {
+      const items = getRecentInvoices();
+      const openInvoices = items.filter((item) => item.status === "Open");
+
+      if (openInvoices.length === 0) {
+        if (!cancelled) setRecentInvoices(items);
+        return;
+      }
+
+      let updated = false;
+
+      for (const item of openInvoices) {
+        try {
+          const result: GetInvoiceResult = await fiber.getInvoice({
+            payment_hash: item.paymentHash,
+          });
+
+          if (
+            result.status !== item.status ||
+            result.invoice.amount !== item.amount
+          ) {
+            updated = true;
+            saveRecentInvoice({
+              ...item,
+              status: result.status,
+              amount: result.invoice.amount ?? item.amount,
+              description:
+                getInvoiceDescription(result.invoice) ?? item.description,
+              updatedAt: Date.now(),
+            });
+          }
+        } catch {
+          // Keep local invoice history intact if a status refresh is temporarily unavailable.
+        }
+      }
+
+      if (!cancelled) {
+        setRecentInvoices(updated ? getRecentInvoices() : items);
+      }
+    };
+
+    void refreshOpenInvoices();
+    const intervalId = window.setInterval(
+      refreshOpenInvoices,
+      INVOICE_STATUS_REFRESH_INTERVAL_MS,
+    );
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+    };
+  }, [defaultPeerConnected, fiber, status]);
 
   const tabLabels = {
     create: t("invoicesPage.create"),
@@ -455,9 +529,7 @@ function LookupInvoice({
 
 function InvoiceDisplay({ invoice }: { invoice: CkbInvoice }) {
   const { t } = useI18n();
-  const description = invoice.data.attrs.find(
-    (attr): attr is { Description: string } => "Description" in attr,
-  );
+  const description = getInvoiceDescription(invoice);
 
   return (
     <div className="space-y-1 text-xs">
@@ -486,7 +558,7 @@ function InvoiceDisplay({ invoice }: { invoice: CkbInvoice }) {
           <span className="text-white/40">
             {t("invoicesPage.descriptionLabel")}:
           </span>{" "}
-          <span className="text-white/80">{description.Description}</span>
+          <span className="text-white/80">{description}</span>
         </div>
       )}
     </div>
