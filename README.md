@@ -4,6 +4,11 @@ Reusable browser wallet and payment UX infrastructure for CKB Fiber Network.
 
 This project is prepared for **Gone in 60ms: Fiber Network Infrastructure Hackathon** under the **Wallet and Payment UX Infrastructure** category. It is not positioned as a consumer wallet product. It is a working reference kit for wallets, apps, and payment teams that need to integrate Fiber node startup, channel lifecycle flows, invoices, QR payments, mobile scanning, and CKB wallet signing into a browser experience.
 
+## Links
+
+- Repository: [tianlitao/fiber-wallet-ux-kit](https://github.com/tianlitao/fiber-wallet-ux-kit)
+- Hosted demo: [fiber-wallet-ux-kit.tianlitao3399.workers.dev](http://fiber-wallet-ux-kit.tianlitao3399.workers.dev/)
+
 ## Infrastructure gap
 
 Fiber opens a powerful payment-channel design space, but application developers still need reusable patterns for:
@@ -117,7 +122,7 @@ Cross-Origin-Opener-Policy: same-origin
 Cross-Origin-Embedder-Policy: require-corp
 ```
 
-All routes keep these headers so Fiber runtime pages stay cross-origin isolated.
+Fiber runtime routes keep these headers so the app stays cross-origin isolated. `/joyid-sign-bridge` is a deliberate exception: it uses `Cross-Origin-Opener-Policy: same-origin-allow-popups` and omits `COEP` so JoyID popup authentication and signing can keep a usable opener relationship.
 
 ## Current limitations
 

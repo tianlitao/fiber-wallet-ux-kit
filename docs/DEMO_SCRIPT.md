@@ -10,7 +10,7 @@ The goal is to show how wallets and apps can integrate Fiber node startup, local
 
 ## Flow
 
-1. Open the hosted demo at `/en`.
+1. Open the hosted demo at `http://fiber-wallet-ux-kit.tianlitao3399.workers.dev/en`.
 2. Show the Dashboard identity wallet card.
 3. Create or import the 12-word Fiber identity wallet.
 4. Set a local password.

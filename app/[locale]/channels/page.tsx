@@ -3,7 +3,13 @@
 import React from "react";
 import { useState, useEffect, useCallback } from "react";
 import { useFiber } from "@/lib/fiberContext";
-import { ckbToShannons, shannonsToDisplay, DEFAULT_PEER_PUBKEY, DEFAULT_PEER_ADDRESS } from "@/lib/fiberConfig";
+import {
+  ckbToShannons,
+  shannonsToDisplay,
+  DEFAULT_FUNDING_FEE_RATE,
+  DEFAULT_PEER_PUBKEY,
+  DEFAULT_PEER_ADDRESS,
+} from "@/lib/fiberConfig";
 import { truncateAddress } from "@/utils/stringUtils";
 import Navigation from "@/components/Navigation";
 import ConnectWallet from "@/components/ConnectWallet";
@@ -193,6 +199,7 @@ async function resolveFundingLockCellDeps(client: any, lockScript: {
     ccc.KnownScript.PWLock,
     ccc.KnownScript.AnyoneCanPay,
     ccc.KnownScript.NostrLock,
+    ccc.KnownScript.JoyId,
     ccc.KnownScript.Secp256k1Blake160,
     ccc.KnownScript.Secp256k1Multisig,
     ccc.KnownScript.Secp256k1MultisigV2,
@@ -357,6 +364,7 @@ function OpenChannelForm({
         shutdown_script: fundingLockScript,
         funding_lock_script: fundingLockScript,
         funding_lock_script_cell_deps: fundingLockScriptCellDeps,
+        funding_fee_rate: DEFAULT_FUNDING_FEE_RATE,
       });
 
       // Timeout after 60s — peer must auto-accept for this to succeed

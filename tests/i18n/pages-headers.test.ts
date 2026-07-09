@@ -26,16 +26,19 @@ describe("Cloudflare Pages static headers", () => {
     expect(content).toContain(
       "Cross-Origin-Embedder-Policy: require-corp",
     );
-    expect(content).not.toContain("/joyid-bridge");
-    expect(content).not.toContain("! Cross-Origin-Opener-Policy");
-    expect(content).not.toContain("! Cross-Origin-Embedder-Policy");
+    expect(content).toContain("/joyid-sign-bridge");
+    expect(content).toContain(
+      "Cross-Origin-Opener-Policy: same-origin-allow-popups",
+    );
+    expect(content).toContain("! Cross-Origin-Embedder-Policy");
   });
 });
 
 describe("Next.js dev headers", () => {
   it("defines cross-origin isolation headers for local development", async () => {
     const nextConfig = await loadNextConfig(PHASE_DEVELOPMENT_SERVER);
-    const headerRules = await nextConfig.headers();
+    expect(nextConfig.headers).toBeDefined();
+    const headerRules = await nextConfig.headers!();
     const allRouteRule = headerRules.find((rule) => rule.source === "/:path*");
 
     expect(allRouteRule?.headers).toEqual(
@@ -47,6 +50,24 @@ describe("Next.js dev headers", () => {
         {
           key: "Cross-Origin-Embedder-Policy",
           value: "require-corp",
+        },
+      ]),
+    );
+  });
+
+  it("allows the JoyID signing bridge to retain wallet popup openers in development", async () => {
+    const nextConfig = await loadNextConfig(PHASE_DEVELOPMENT_SERVER);
+    expect(nextConfig.headers).toBeDefined();
+    const headerRules = await nextConfig.headers!();
+    const bridgeRule = headerRules.find(
+      (rule) => rule.source === "/joyid-sign-bridge",
+    );
+
+    expect(bridgeRule?.headers).toEqual(
+      expect.arrayContaining([
+        {
+          key: "Cross-Origin-Opener-Policy",
+          value: "same-origin-allow-popups",
         },
       ]),
     );

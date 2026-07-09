@@ -1,6 +1,6 @@
 import { PHASE_DEVELOPMENT_SERVER } from "next/constants.js";
 
-/** @type {import('next').NextConfig} */
+/** @type {(phase: string, options?: { defaultConfig?: import('next').NextConfig }) => import('next').NextConfig} */
 const createNextConfig = (phase) => ({
   output: phase === PHASE_DEVELOPMENT_SERVER ? undefined : "export",
   async headers() {
@@ -15,6 +15,15 @@ const createNextConfig = (phase) => ({
           {
             key: "Cross-Origin-Embedder-Policy",
             value: "require-corp",
+          },
+        ],
+      },
+      {
+        source: "/joyid-sign-bridge",
+        headers: [
+          {
+            key: "Cross-Origin-Opener-Policy",
+            value: "same-origin-allow-popups",
           },
         ],
       },

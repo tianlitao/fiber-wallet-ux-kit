@@ -66,6 +66,7 @@ services:
 export const DEFAULT_PEER_HOST = "fiber.nervosscan.com";
 export const DEFAULT_PEER_PUBKEY = "0376333505e0cfc13bf2ffee4e55027606388b24f00acf418f6535d89cd30749da";
 export const DEFAULT_PEER_ADDRESS = "/dns4/fiber.nervosscan.com/tcp/443/wss/p2p/QmYGNtMg2MkoXdDgbVd4YfDNh3mATJ2K8EUBw4FCHTrHT4";
+export const DEFAULT_FUNDING_FEE_RATE = "0x7d0"; // 2000 shannons/KW
 
 // --- CKB unit helpers ---
 

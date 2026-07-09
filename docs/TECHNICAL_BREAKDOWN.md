@@ -57,9 +57,21 @@ This makes the browser experience self-contained while preserving a clear recove
 
 This flow is the most important reusable infrastructure pattern in the project because it bridges Fiber channel negotiation with external CKB wallet signing.
 
+## Why JoyID uses a bridge page
+
+JoyID connection and transaction signing both go through `/joyid-sign-bridge` instead of redirecting the main app window directly to JoyID.
+
+The bridge exists for three reasons:
+
+- Fiber runtime pages need `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp` so browser Fiber can use `SharedArrayBuffer`.
+- JoyID popup flows need a page that can keep a usable popup relationship with JoyID, so `/joyid-sign-bridge` uses `Cross-Origin-Opener-Policy: same-origin-allow-popups` and does not inherit the app-wide `COEP` header.
+- Wallet connection and funding-signature approval should feel like the same wallet operation. The main app keeps its route, Fiber state, and form state, while the bridge owns the short-lived JoyID popup and passes the result back through local storage.
+
+This makes JoyID behavior consistent across wallet connect and channel funding signatures. It also keeps the cross-origin isolation requirement scoped to the Fiber app pages instead of forcing the entire wallet approval flow to run under the same headers.
+
 ## Cross-origin isolation
 
-Fiber runtime pages need `COOP/COEP` headers for `SharedArrayBuffer`. The project applies those headers to all routes through `public/_headers` and relies on the standard CCC wallet connector flow.
+Fiber runtime pages need `COOP/COEP` headers for `SharedArrayBuffer`. The project applies those headers to the app routes through `public/_headers`, while `/joyid-sign-bridge` is a deliberate exception for JoyID popup interoperability.
 
 ## Invoice and payment infrastructure
 

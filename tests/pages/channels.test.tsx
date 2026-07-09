@@ -1,13 +1,24 @@
 import React from "react";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { DEFAULT_PEER_PUBKEY } from "@/lib/fiberConfig";
 import { useI18n } from "@/lib/i18n/useI18n";
 
-const { fiberState, pathnameState, signerState } = vi.hoisted(() => ({
+const {
+  addressFromStringMock,
+  fiberState,
+  pathnameState,
+  signerState,
+} = vi.hoisted(() => ({
+  addressFromStringMock: vi.fn(),
   fiberState: {
     fiber: {
+      connectPeer: vi.fn(),
       listChannels: vi.fn(),
+      listPeers: vi.fn(),
+      openChannelWithExternalFunding: vi.fn(),
       shutdownChannel: vi.fn(),
+      submitSignedFundingTx: vi.fn(),
     },
     status: "running",
     error: null,
@@ -26,9 +37,25 @@ const { fiberState, pathnameState, signerState } = vi.hoisted(() => ({
     getAddresses: vi.fn(),
     getRecommendedAddress: vi.fn(),
     getBalance: vi.fn(),
-    client: {},
+    client: {
+      getKnownScript: vi.fn(),
+    },
   },
 }));
+
+const SECP256K1_SCRIPT = {
+  codeHash: "0x9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8",
+  hashType: "type",
+  args: "0xabc",
+  eq: () => true,
+};
+
+const JOY_ID_SCRIPT = {
+  codeHash: "0xd23761b364210735c19c60561d213fb3beae2fd6172743719eff6920e020baac",
+  hashType: "type",
+  args: "0x0001c4c7584daaf5d47cead7e5e4d32fae4241c35c29",
+  eq: () => true,
+};
 
 vi.mock("next/navigation", () => ({
   usePathname: () => pathnameState.current,
@@ -47,20 +74,14 @@ vi.mock("@ckb-ccc/connector-react", () => ({
     useSigner: () => signerState,
     fixedPointToString: (value: string | number | bigint) => String(value),
     Address: {
-      fromString: vi.fn().mockImplementation(async () => ({
-        script: {
-          codeHash: "0x9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8",
-          hashType: "type",
-          args: "0xabc",
-          eq: () => true,
-        },
-      })),
+      fromString: addressFromStringMock,
     },
     KnownScript: {
       OmniLock: "OmniLock",
       PWLock: "PWLock",
       AnyoneCanPay: "AnyoneCanPay",
       NostrLock: "NostrLock",
+      JoyId: "JoyId",
       Secp256k1Blake160: "Secp256k1Blake160",
       Secp256k1Multisig: "Secp256k1Multisig",
       Secp256k1MultisigV2: "Secp256k1MultisigV2",
@@ -120,14 +141,36 @@ describe("ChannelsPage", () => {
     pathnameState.current = "/zh/channels";
     fiberState.status = "running";
     fiberState.defaultPeerConnected = true;
+    fiberState.fiber.connectPeer.mockReset();
+    fiberState.fiber.connectPeer.mockResolvedValue({});
     fiberState.fiber.listChannels.mockReset();
     fiberState.fiber.listChannels.mockResolvedValue({ channels: [] });
+    fiberState.fiber.listPeers.mockReset();
+    fiberState.fiber.listPeers.mockResolvedValue({
+      peers: [{ pubkey: DEFAULT_PEER_PUBKEY }],
+    });
+    fiberState.fiber.openChannelWithExternalFunding.mockReset();
+    fiberState.fiber.openChannelWithExternalFunding.mockReturnValue(
+      new Promise(() => undefined),
+    );
     fiberState.fiber.shutdownChannel.mockReset();
     fiberState.fiber.shutdownChannel.mockResolvedValue({});
+    fiberState.fiber.submitSignedFundingTx.mockReset();
+    fiberState.fiber.submitSignedFundingTx.mockResolvedValue({
+      funding_tx_hash: "0xfunding",
+    });
     signerState.isConnected.mockReset();
     signerState.getAddresses.mockReset();
     signerState.getRecommendedAddress.mockReset();
     signerState.getBalance.mockReset();
+    signerState.client.getKnownScript.mockReset();
+    signerState.client.getKnownScript.mockRejectedValue(
+      new Error("Unsupported known script"),
+    );
+    addressFromStringMock.mockReset();
+    addressFromStringMock.mockResolvedValue({
+      script: SECP256K1_SCRIPT,
+    });
     signerState.isConnected.mockResolvedValue(true);
     signerState.getAddresses.mockResolvedValue(["ckt1qdefault"]);
     signerState.getRecommendedAddress.mockResolvedValue("ckt1qdefault");
@@ -207,6 +250,71 @@ describe("ChannelsPage", () => {
     expect(
       await screen.findByText("Error: Amount must be at least 600 CKB."),
     ).toBeInTheDocument();
+  });
+
+  it("passes JoyID lock cell deps when opening a funded channel", async () => {
+    signerState.getAddresses.mockResolvedValue(["ckt1qjoyid"]);
+    addressFromStringMock.mockResolvedValue({
+      script: JOY_ID_SCRIPT,
+    });
+    signerState.client.getKnownScript.mockImplementation(
+      async (knownScript: string) => {
+        if (knownScript !== "JoyId") {
+          throw new Error("Unsupported known script");
+        }
+
+        return {
+          codeHash: JOY_ID_SCRIPT.codeHash,
+          hashType: JOY_ID_SCRIPT.hashType,
+          cellDeps: [
+            {
+              cellDep: {
+                depType: "code",
+                outPoint: {
+                  txHash:
+                    "0x4a596d31dc35e88fb1591debbf680b04a44b4a434e3a94453c21ea8950ffb4d9",
+                  index: 0,
+                },
+              },
+            },
+          ],
+        };
+      },
+    );
+
+    await renderChannelsWithLocaleLayout("en");
+
+    fireEvent.click(screen.getByRole("button", { name: "Open Channel" }));
+    fireEvent.change(screen.getByPlaceholderText("e.g. 600"), {
+      target: { value: "600" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Open & Fund Channel" }));
+
+    await waitFor(
+      () => {
+        expect(fiberState.fiber.openChannelWithExternalFunding).toHaveBeenCalledWith(
+          expect.objectContaining({
+            funding_lock_script: {
+              code_hash: JOY_ID_SCRIPT.codeHash,
+              hash_type: JOY_ID_SCRIPT.hashType,
+              args: JOY_ID_SCRIPT.args,
+            },
+            funding_lock_script_cell_deps: [
+              {
+                dep_type: "code",
+                out_point: {
+                  tx_hash:
+                    "0x4a596d31dc35e88fb1591debbf680b04a44b4a434e3a94453c21ea8950ffb4d9",
+                  index: "0x0",
+                },
+              },
+            ],
+            funding_fee_rate: "0x7d0",
+          }),
+        );
+      },
+      { timeout: 2500 },
+    );
   });
 
   it("renders the default-peer-required fallback when the default peer is disconnected", async () => {

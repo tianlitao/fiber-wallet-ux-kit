@@ -1,3 +1,7 @@
 /*
   Cross-Origin-Opener-Policy: same-origin
   Cross-Origin-Embedder-Policy: require-corp
+
+/joyid-sign-bridge
+  Cross-Origin-Opener-Policy: same-origin-allow-popups
+  ! Cross-Origin-Embedder-Policy

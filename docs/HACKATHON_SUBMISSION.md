@@ -12,20 +12,20 @@ The project is a working reference kit rather than a consumer wallet product. It
 
 ## Team members
 
-- Project maintainer: add name before submission
-- Contributors: add names before submission
+- Project maintainer: tianlitao
+- Contributors: tianlitao
 
 ## Repository link
 
-Add GitHub repository URL before submission.
+[tianlitao/fiber-wallet-ux-kit](https://github.com/tianlitao/fiber-wallet-ux-kit)
 
 ## Hosted demo
 
-Add deployed demo URL before submission.
+[fiber-wallet-ux-kit.tianlitao3399.workers.dev](http://fiber-wallet-ux-kit.tianlitao3399.workers.dev/)
 
 ## Video demonstration
 
-Add video URL before submission.
+Video URL will be added after recording.
 
 ## Fiber infrastructure gap addressed
 
