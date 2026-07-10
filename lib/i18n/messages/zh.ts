@@ -202,6 +202,28 @@ export const zh: Messages = {
     fillAllFieldsError: "请填写所有字段。",
     invalidAmountError: "请输入有效的 CKB 金额，小数最多 8 位。",
     amountMustBePositiveError: "金额必须大于 0。",
+    checkReadiness: "检查支付准备情况",
+    checkingReadiness: "正在检查准备情况...",
+    readinessReady: "可以支付",
+    readinessWarning: "准备情况检查不完整",
+    readinessBlocked: "当前无法支付",
+    readinessNotGuarantee:
+      "预检当前找到了路由，但不会预留流动性，也不能保证最终结算。",
+    technicalDetails: "技术详情",
+    diagnostics: {
+      node_not_running: "请先在仪表盘中启动 Fiber 节点。",
+      peer_disconnected: "请等待默认 Fiber 节点重新连接后再检查。",
+      no_usable_channel: "请先打开或恢复一个可用的支付通道。",
+      insufficient_outbound_capacity:
+        "暂时还没有找到可用支付路径。通道和路由可能还在同步，请稍等一会儿再试。",
+      route_not_found:
+        "暂时还没有找到可用支付路径。通道和路由可能还在同步，请稍等一会儿再试。",
+      asset_mismatch: "支付资产与当前可用通道的资产不匹配。",
+      fee_limit: "当前路由超过手续费限制，请检查手续费设置后重试。",
+      timeout: "路由检查超时，请检查连接后重试。",
+      invalid_request: "支付请求无效，请检查发票或收款方信息。",
+      unknown: "Fiber 无法确认这笔支付，请查看技术详情后再重试。",
+    },
     routeNotReadyHint:
       "暂时还没有找到可用支付路径。通道和路由可能还在同步，请稍等一会儿再试。",
     sending: "发送中...",

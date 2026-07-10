@@ -216,6 +216,35 @@ const enMessages = {
     invalidAmountError:
       "Enter a valid CKB amount with up to 8 decimal places.",
     amountMustBePositiveError: "Amount must be greater than 0.",
+    checkReadiness: "Check payment readiness",
+    checkingReadiness: "Checking readiness...",
+    readinessReady: "Ready to pay",
+    readinessWarning: "Readiness check incomplete",
+    readinessBlocked: "Payment blocked",
+    readinessNotGuarantee:
+      "A dry run found a route now, but it does not reserve liquidity or guarantee settlement.",
+    technicalDetails: "Technical details",
+    diagnostics: {
+      node_not_running: "Start the Fiber node from the Dashboard.",
+      peer_disconnected:
+        "Wait for the default Fiber peer to reconnect, then check again.",
+      no_usable_channel:
+        "Open or restore an enabled payment channel before paying.",
+      insufficient_outbound_capacity:
+        "Available outbound capacity is too low. Fund a channel or send a smaller amount.",
+      route_not_found:
+        "No route is available. Wait for routing data to sync or try another channel.",
+      asset_mismatch:
+        "The payment asset does not match the available channel asset.",
+      fee_limit:
+        "The route exceeds the current fee limit. Review the fee settings and try again.",
+      timeout:
+        "The route check timed out. Check connectivity and try again.",
+      invalid_request:
+        "The payment request is invalid. Review the invoice or recipient details.",
+      unknown:
+        "Fiber could not verify this payment. Review the technical details before retrying.",
+    },
     routeNotReadyHint:
       "No payment route is available yet. Channels and routing data may still be syncing. Please wait a moment and try again.",
     sending: "Sending...",

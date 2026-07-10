@@ -2,6 +2,14 @@ import React from "react";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+const readyChannel = {
+  channel_id: "0xready",
+  state: { state_name: "CHANNEL_READY", state_flags: "0x0" },
+  enabled: true,
+  local_balance: "0x3b9aca00",
+  remote_balance: "0x3b9aca00",
+};
+
 const { fiberState, pathnameState } = vi.hoisted(() => ({
   fiberState: {
     fiber: {} as any,
@@ -236,6 +244,7 @@ describe("Invoices and Payments pages", () => {
 
   it("renders the non-running payments fallback through the real locale layout", async () => {
     fiberState.status = "idle";
+    fiberState.fiber = null as any;
 
     await renderWithLocaleLayout("zh", "/payments");
 
@@ -245,6 +254,12 @@ describe("Invoices and Payments pages", () => {
     expect(
       screen.getByText("请先在仪表盘中启动 Fiber 节点。"),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { level: 2, name: "发送支付" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getAllByRole("button", { name: "发送支付" }).at(-1),
+    ).toBeDisabled();
   });
 
   it("renders the default-peer-required fallback when the default peer is disconnected", async () => {
@@ -255,5 +270,98 @@ describe("Invoices and Payments pages", () => {
     expect(
       await screen.findByText("请先等待与 fiber.nervosscan.com 建立连接后再使用本页。"),
     ).toBeInTheDocument();
+  });
+
+  it("checks invoice readiness and clears the result when the request changes", async () => {
+    const sendPayment = vi.fn().mockResolvedValue({ status: "Created" });
+    fiberState.fiber = {
+      listChannels: vi.fn().mockResolvedValue({ channels: [readyChannel] }),
+      sendPayment,
+    };
+
+    await renderWithLocaleLayout("en", "/payments");
+
+    const invoiceInput = screen.getByLabelText("Invoice String");
+    fireEvent.change(invoiceInput, {
+      target: { value: "fibt1invoice" },
+    });
+    fireEvent.click(
+      screen.getByRole("button", { name: "Check payment readiness" }),
+    );
+
+    expect(await screen.findByText("Ready to pay")).toBeInTheDocument();
+    expect(sendPayment).toHaveBeenCalledWith({
+      invoice: "fibt1invoice",
+      allow_self_payment: true,
+      dry_run: true,
+    });
+
+    fireEvent.change(invoiceInput, {
+      target: { value: "fibt1changed" },
+    });
+
+    expect(screen.queryByText("Ready to pay")).not.toBeInTheDocument();
+  });
+
+  it("runs a dry run before sending the real invoice payment", async () => {
+    const sendPayment = vi
+      .fn()
+      .mockResolvedValueOnce({ status: "Created" })
+      .mockResolvedValueOnce({
+        payment_hash: "0xpaid",
+        status: "Success",
+        created_at: "0x1",
+        last_updated_at: "0x1",
+        fee: "0x0",
+      });
+    fiberState.fiber = {
+      listChannels: vi.fn().mockResolvedValue({ channels: [readyChannel] }),
+      sendPayment,
+    };
+
+    await renderWithLocaleLayout("en", "/payments");
+
+    fireEvent.change(screen.getByLabelText("Invoice String"), {
+      target: { value: "fibt1invoice" },
+    });
+    fireEvent.click(
+      screen.getAllByRole("button", { name: "Send Payment" }).at(-1)!,
+    );
+
+    await waitFor(() => expect(sendPayment).toHaveBeenCalledTimes(2));
+    expect(sendPayment.mock.calls[0][0]).toMatchObject({ dry_run: true });
+    expect(sendPayment.mock.calls[1][0]).toEqual({
+      invoice: "fibt1invoice",
+      allow_self_payment: true,
+    });
+  });
+
+  it("blocks a real payment when the dry run cannot find a route", async () => {
+    const sendPayment = vi
+      .fn()
+      .mockRejectedValue(new Error("failed to build route: no path found"));
+    fiberState.fiber = {
+      listChannels: vi.fn().mockResolvedValue({ channels: [readyChannel] }),
+      sendPayment,
+    };
+
+    await renderWithLocaleLayout("en", "/payments");
+
+    fireEvent.change(screen.getByLabelText("Invoice String"), {
+      target: { value: "fibt1blocked" },
+    });
+    fireEvent.click(
+      screen.getAllByRole("button", { name: "Send Payment" }).at(-1)!,
+    );
+
+    expect(
+      await screen.findByText(
+        "No route is available. Wait for routing data to sync or try another channel.",
+      ),
+    ).toBeInTheDocument();
+    expect(sendPayment).toHaveBeenCalledTimes(1);
+    expect(sendPayment).toHaveBeenCalledWith(
+      expect.objectContaining({ dry_run: true }),
+    );
   });
 });

@@ -2,13 +2,23 @@
 
 import React from "react";
 import { useCallback, useEffect, useState } from "react";
-import type { GetPaymentCommandResult } from "@nervosnetwork/fiber-js";
+import type {
+  Channel,
+  GetPaymentCommandResult,
+} from "@nervosnetwork/fiber-js";
 import ConnectWallet from "@/components/ConnectWallet";
 import InvoiceScanner from "@/components/InvoiceScanner";
 import Navigation from "@/components/Navigation";
 import { ckbToShannons, shannonsToDisplay } from "@/lib/fiberConfig";
 import { useFiber } from "@/lib/fiberContext";
 import { useI18n } from "@/lib/i18n/useI18n";
+import {
+  diagnosePaymentError,
+  usePaymentReadiness,
+  type PaymentNodeStatus,
+  type PaymentReadinessResult,
+  type PaymentRequest,
+} from "@/lib/paymentInfrastructure";
 import {
   getRecentPayments,
   paymentItemFromResult,
@@ -24,40 +34,12 @@ const paymentStatusColors: Record<string, string> = {
   Failed: "bg-red-500/20 text-red-400",
 };
 
-function getErrorMessage(error: unknown) {
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  if (
-    error &&
-    typeof error === "object" &&
-    "message" in error &&
-    typeof error.message === "string"
-  ) {
-    return error.message;
-  }
-
-  return String(error);
-}
-
-function isRouteNotReadyError(error: unknown) {
-  const message = getErrorMessage(error).toLowerCase();
-
-  return (
-    message.includes("failed to build route") &&
-    (message.includes("no path found") ||
-      message.includes("pathfind error") ||
-      (message.includes("outbound liquidity") &&
-        message.includes("insufficient")))
-  );
-}
-
 export default function PaymentsPage() {
   const { fiber, status, defaultPeerConnected } = useFiber();
   const { t } = useI18n();
   const [tab, setTab] = useState<"send" | "status">("send");
   const [recentPayments, setRecentPayments] = useState<RecentPaymentItem[]>([]);
+  const [channels, setChannels] = useState<Channel[] | null>(null);
 
   useEffect(() => {
     setRecentPayments(getRecentPayments());
@@ -72,39 +54,38 @@ export default function PaymentsPage() {
     status: t("paymentsPage.status"),
   } as const;
 
-  if (status !== "running") {
-    return (
-      <div className="min-h-screen">
-        <Navigation />
-        <div className="mobile-page-shell max-w-6xl mx-auto px-4 py-4 md:py-6">
-          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h1 className="text-2xl font-bold">{t("paymentsPage.title")}</h1>
-            <ConnectWallet />
-          </div>
-          <div className="rounded-xl bg-[#1a1a1a] border border-white/10 p-6 text-center text-white/40">
-            {t("paymentsPage.startNodeFirst")}
-          </div>
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (
+      status !== "running" ||
+      !fiber ||
+      typeof fiber.listChannels !== "function"
+    ) {
+      setChannels(null);
+      return;
+    }
 
-  if (!defaultPeerConnected) {
-    return (
-      <div className="min-h-screen">
-        <Navigation />
-        <div className="mobile-page-shell max-w-6xl mx-auto px-4 py-4 md:py-6">
-          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h1 className="text-2xl font-bold">{t("paymentsPage.title")}</h1>
-            <ConnectWallet />
-          </div>
-          <div className="rounded-xl bg-[#1a1a1a] border border-white/10 p-6 text-center text-white/40">
-            {t("paymentsPage.defaultPeerRequired")}
-          </div>
-        </div>
-      </div>
-    );
-  }
+    let cancelled = false;
+
+    void fiber
+      .listChannels({ include_closed: true })
+      .then((result) => {
+        if (!cancelled) setChannels(result.channels);
+      })
+      .catch(() => {
+        if (!cancelled) setChannels(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [fiber, status]);
+
+  const prerequisiteMessage =
+    status !== "running"
+      ? t("paymentsPage.startNodeFirst")
+      : !defaultPeerConnected
+        ? t("paymentsPage.defaultPeerRequired")
+        : null;
 
   return (
     <div className="min-h-screen">
@@ -114,6 +95,15 @@ export default function PaymentsPage() {
           <h1 className="text-2xl font-bold">{t("paymentsPage.title")}</h1>
           <ConnectWallet />
         </div>
+
+        {prerequisiteMessage ? (
+          <div
+            className="mb-6 rounded-lg border border-yellow-500/20 bg-yellow-500/10 px-4 py-3 text-sm text-yellow-200"
+            role="status"
+          >
+            {prerequisiteMessage}
+          </div>
+        ) : null}
 
         <div className="mb-6 grid grid-cols-2 gap-2 sm:flex sm:gap-1">
           {(["send", "status"] as const).map((tabKey) => (
@@ -133,13 +123,17 @@ export default function PaymentsPage() {
 
         {tab === "send" && (
           <SendPayment
-            fiber={fiber!}
+            channels={channels}
+            fiber={fiber}
+            nodeStatus={status}
+            peerConnected={defaultPeerConnected}
             onRecentPaymentsChange={refreshRecentPayments}
           />
         )}
         {tab === "status" && (
           <PaymentStatus
-            fiber={fiber!}
+            fiber={fiber}
+            enabled={status === "running" && defaultPeerConnected}
             onRecentPaymentsChange={refreshRecentPayments}
           />
         )}
@@ -151,10 +145,16 @@ export default function PaymentsPage() {
 }
 
 function SendPayment({
+  channels,
   fiber,
+  nodeStatus,
+  peerConnected,
   onRecentPaymentsChange,
 }: {
-  fiber: any;
+  channels: Channel[] | null;
+  fiber: any | null;
+  nodeStatus: PaymentNodeStatus;
+  peerConnected: boolean;
   onRecentPaymentsChange: () => void;
 }) {
   const { t } = useI18n();
@@ -167,63 +167,99 @@ function SendPayment({
   const [error, setError] = useState("");
   const [showScanner, setShowScanner] = useState(false);
   const [scannerMessage, setScannerMessage] = useState("");
+  const {
+    check,
+    checking,
+    invalidate: invalidateReadiness,
+    result: readinessResult,
+  } = usePaymentReadiness({
+    channels,
+    fiber,
+    nodeStatus,
+    peerConnected,
+  });
+
+  const buildPaymentRequest = useCallback((): PaymentRequest | null => {
+    if (mode === "invoice") {
+      const trimmedInvoice = invoice.trim();
+      if (!trimmedInvoice) {
+        setError(t("paymentsPage.enterInvoiceError"));
+        return null;
+      }
+
+      return { mode: "invoice", invoice: trimmedInvoice };
+    }
+
+    const trimmedTarget = targetPubkey.trim();
+    if (!trimmedTarget || !amount) {
+      setError(t("paymentsPage.fillAllFieldsError"));
+      return null;
+    }
+
+    let paymentAmount: `0x${string}`;
+    try {
+      paymentAmount = ckbToShannons(amount);
+    } catch {
+      setError(t("paymentsPage.invalidAmountError"));
+      return null;
+    }
+
+    if (BigInt(paymentAmount) === 0n) {
+      setError(t("paymentsPage.amountMustBePositiveError"));
+      return null;
+    }
+
+    return {
+      mode: "keysend",
+      targetPubkey: trimmedTarget,
+      amount: paymentAmount,
+    };
+  }, [amount, invoice, mode, t, targetPubkey]);
+
+  const handleCheckReadiness = useCallback(async () => {
+    setError("");
+    const request = buildPaymentRequest();
+    if (!request) return;
+    await check(request);
+  }, [buildPaymentRequest, check]);
 
   const handleSend = useCallback(async () => {
+    const request = buildPaymentRequest();
+    if (!request || !fiber) return;
+
     setSubmitting(true);
     setError("");
     setResult(null);
 
     try {
+      const readiness = await check(request);
+      if (readiness.status === "blocked") {
+        setSubmitting(false);
+        return;
+      }
+
       let payResult: GetPaymentCommandResult;
-
-      if (mode === "invoice") {
-        if (!invoice) {
-          setError(t("paymentsPage.enterInvoiceError"));
-          setSubmitting(false);
-          return;
-        }
-
+      if (request.mode === "invoice") {
         payResult = await fiber.sendPayment({
-          invoice: invoice.trim(),
+          invoice: request.invoice,
           allow_self_payment: true,
         });
         saveRecentPayment(
           paymentItemFromResult(payResult, {
             mode: "invoice",
-            invoice: invoice.trim(),
+            invoice: request.invoice,
           }),
         );
       } else {
-        if (!targetPubkey || !amount) {
-          setError(t("paymentsPage.fillAllFieldsError"));
-          setSubmitting(false);
-          return;
-        }
-
-        let paymentAmount: `0x${string}`;
-        try {
-          paymentAmount = ckbToShannons(amount);
-        } catch {
-          setError(t("paymentsPage.invalidAmountError"));
-          setSubmitting(false);
-          return;
-        }
-
-        if (BigInt(paymentAmount) === 0n) {
-          setError(t("paymentsPage.amountMustBePositiveError"));
-          setSubmitting(false);
-          return;
-        }
-
         payResult = await fiber.sendPayment({
-          target_pubkey: targetPubkey.trim(),
-          amount: paymentAmount,
+          target_pubkey: request.targetPubkey,
+          amount: request.amount,
           keysend: true,
         });
         saveRecentPayment(
           paymentItemFromResult(payResult, {
             mode: "keysend",
-            targetPubkey: targetPubkey.trim(),
+            targetPubkey: request.targetPubkey,
             amount,
           }),
         );
@@ -243,11 +279,14 @@ function SendPayment({
           setResult(latestResult);
           saveRecentPayment(
             paymentItemFromResult(latestResult, {
-              mode,
-              invoice: mode === "invoice" ? invoice.trim() : undefined,
+              mode: request.mode,
+              invoice:
+                request.mode === "invoice" ? request.invoice : undefined,
               targetPubkey:
-                mode === "keysend" ? targetPubkey.trim() : undefined,
-              amount: mode === "keysend" ? amount : undefined,
+                request.mode === "keysend"
+                  ? request.targetPubkey
+                  : undefined,
+              amount: request.mode === "keysend" ? amount : undefined,
             }),
           );
           onRecentPaymentsChange();
@@ -259,24 +298,23 @@ function SendPayment({
           }
         }
       }
-    } catch (e: any) {
-      setError(
-        isRouteNotReadyError(e)
-          ? t("paymentsPage.routeNotReadyHint")
-          : getErrorMessage(e),
-      );
+    } catch (e) {
+      const diagnostic = diagnosePaymentError(e);
+      setError(t(diagnostic.messageKey));
     }
 
     setSubmitting(false);
   }, [
     amount,
+    buildPaymentRequest,
+    check,
     fiber,
-    invoice,
-    mode,
     onRecentPaymentsChange,
     t,
-    targetPubkey,
   ]);
+
+  const paymentActionsEnabled =
+    Boolean(fiber) && nodeStatus === "running" && peerConnected;
 
   return (
     <div className="rounded-xl bg-[#1a1a1a] border border-white/10 p-6">
@@ -286,7 +324,12 @@ function SendPayment({
 
       <div className="mb-4 grid grid-cols-2 gap-2 sm:flex sm:gap-1">
         <button
-          onClick={() => setMode("invoice")}
+          aria-pressed={mode === "invoice"}
+          onClick={() => {
+            setMode("invoice");
+            setError("");
+            invalidateReadiness();
+          }}
           className={`w-full rounded-lg px-3 py-3 text-xs transition-colors sm:w-auto sm:py-1.5 ${
             mode === "invoice"
               ? "bg-blue-600 text-white"
@@ -296,7 +339,12 @@ function SendPayment({
           {t("paymentsPage.payInvoice")}
         </button>
         <button
-          onClick={() => setMode("keysend")}
+          aria-pressed={mode === "keysend"}
+          onClick={() => {
+            setMode("keysend");
+            setError("");
+            invalidateReadiness();
+          }}
           className={`w-full rounded-lg px-3 py-3 text-xs transition-colors sm:w-auto sm:py-1.5 ${
             mode === "keysend"
               ? "bg-blue-600 text-white"
@@ -310,7 +358,10 @@ function SendPayment({
       <div className="space-y-4">
         {mode === "invoice" ? (
           <div>
-            <label className="block text-sm text-white/60 mb-1">
+            <label
+              htmlFor="payment-invoice"
+              className="block text-sm text-white/60 mb-1"
+            >
               {t("paymentsPage.invoiceStringLabel")}
             </label>
             <div className="mb-2">
@@ -323,10 +374,13 @@ function SendPayment({
               </button>
             </div>
             <textarea
+              id="payment-invoice"
               value={invoice}
               onChange={(e) => {
                 setInvoice(e.target.value);
+                setError("");
                 setScannerMessage("");
+                invalidateReadiness();
               }}
               placeholder={t("paymentsPage.invoiceStringPlaceholder")}
               rows={3}
@@ -343,6 +397,7 @@ function SendPayment({
                     setError("");
                     setScannerMessage(t("paymentsPage.scannerReady"));
                     setShowScanner(false);
+                    invalidateReadiness();
                   }}
                   onClose={() => setShowScanner(false)}
                 />
@@ -352,25 +407,42 @@ function SendPayment({
         ) : (
           <>
             <div>
-              <label className="block text-sm text-white/60 mb-1">
+              <label
+                htmlFor="payment-target-pubkey"
+                className="block text-sm text-white/60 mb-1"
+              >
                 {t("paymentsPage.targetPubkeyLabel")}
               </label>
               <input
+                id="payment-target-pubkey"
                 type="text"
                 value={targetPubkey}
-                onChange={(e) => setTargetPubkey(e.target.value)}
+                onChange={(e) => {
+                  setTargetPubkey(e.target.value);
+                  setError("");
+                  invalidateReadiness();
+                }}
                 placeholder={t("paymentsPage.targetPubkeyPlaceholder")}
                 className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm font-mono focus:outline-none focus:border-blue-500"
               />
             </div>
             <div>
-              <label className="block text-sm text-white/60 mb-1">
+              <label
+                htmlFor="payment-amount"
+                className="block text-sm text-white/60 mb-1"
+              >
                 {t("paymentsPage.amountLabel")}
               </label>
               <input
+                id="payment-amount"
                 type="text"
+                inputMode="decimal"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={(e) => {
+                  setAmount(e.target.value);
+                  setError("");
+                  invalidateReadiness();
+                }}
                 placeholder={t("paymentsPage.amountPlaceholder")}
                 className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm focus:outline-none focus:border-blue-500"
               />
@@ -378,19 +450,40 @@ function SendPayment({
           </>
         )}
 
+        {readinessResult ? (
+          <PaymentReadinessPanel result={readinessResult} />
+        ) : null}
+
         {error && (
-          <div className="text-sm p-3 rounded-lg bg-red-500/10 text-red-400">
+          <div
+            className="text-sm p-3 rounded-lg bg-red-500/10 text-red-400"
+            role="alert"
+          >
             {error}
           </div>
         )}
 
-        <button
-          onClick={handleSend}
-          disabled={submitting}
-          className="w-full rounded-lg bg-blue-600 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50 sm:w-auto sm:py-2"
-        >
-          {submitting ? t("paymentsPage.sending") : t("paymentsPage.sendTitle")}
-        </button>
+        <div className="grid grid-cols-1 gap-2 sm:flex">
+          <button
+            type="button"
+            onClick={handleCheckReadiness}
+            disabled={!paymentActionsEnabled || checking || submitting}
+            className="min-h-11 w-full rounded-lg bg-white/10 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
+          >
+            {checking
+              ? t("paymentsPage.checkingReadiness")
+              : t("paymentsPage.checkReadiness")}
+          </button>
+          <button
+            onClick={handleSend}
+            disabled={!paymentActionsEnabled || submitting || checking}
+            className="min-h-11 w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
+          >
+            {submitting
+              ? t("paymentsPage.sending")
+              : t("paymentsPage.sendTitle")}
+          </button>
+        </div>
 
         {result && <PaymentResultCard result={result} />}
       </div>
@@ -398,11 +491,61 @@ function SendPayment({
   );
 }
 
+function PaymentReadinessPanel({
+  result,
+}: {
+  result: PaymentReadinessResult;
+}) {
+  const { t } = useI18n();
+  const tone = {
+    ready: "border-green-500/25 bg-green-500/10 text-green-200",
+    warning: "border-yellow-500/25 bg-yellow-500/10 text-yellow-200",
+    blocked: "border-red-500/25 bg-red-500/10 text-red-200",
+  }[result.status];
+  const statusLabel = {
+    ready: t("paymentsPage.readinessReady"),
+    warning: t("paymentsPage.readinessWarning"),
+    blocked: t("paymentsPage.readinessBlocked"),
+  }[result.status];
+
+  return (
+    <div
+      aria-live="polite"
+      className={`rounded-lg border p-4 text-sm ${tone}`}
+      role="status"
+    >
+      <div className="font-medium">{statusLabel}</div>
+      {result.diagnostic ? (
+        <div className="mt-1 text-sm">
+          {t(result.diagnostic.messageKey)}
+        </div>
+      ) : null}
+      {result.status === "ready" ? (
+        <div className="mt-1 text-xs text-white/55">
+          {t("paymentsPage.readinessNotGuarantee")}
+        </div>
+      ) : null}
+      {result.diagnostic?.technicalDetail ? (
+        <details className="mt-2 text-xs text-white/55">
+          <summary className="cursor-pointer select-none">
+            {t("paymentsPage.technicalDetails")}
+          </summary>
+          <div className="mt-1 break-all font-mono">
+            {result.diagnostic.technicalDetail}
+          </div>
+        </details>
+      ) : null}
+    </div>
+  );
+}
+
 function PaymentStatus({
+  enabled,
   fiber,
   onRecentPaymentsChange,
 }: {
-  fiber: any;
+  enabled: boolean;
+  fiber: any | null;
   onRecentPaymentsChange: () => void;
 }) {
   const { t } = useI18n();
@@ -416,6 +559,7 @@ function PaymentStatus({
       setError(t("paymentsPage.enterPaymentHashError"));
       return;
     }
+    if (!fiber || !enabled) return;
 
     setSubmitting(true);
     setError("");
@@ -437,7 +581,7 @@ function PaymentStatus({
     }
 
     setSubmitting(false);
-  }, [fiber, onRecentPaymentsChange, paymentHash, t]);
+  }, [enabled, fiber, onRecentPaymentsChange, paymentHash, t]);
 
   return (
     <div className="rounded-xl bg-[#1a1a1a] border border-white/10 p-6">
@@ -446,10 +590,14 @@ function PaymentStatus({
       </h2>
       <div className="space-y-4">
         <div>
-          <label className="block text-sm text-white/60 mb-1">
+          <label
+            htmlFor="payment-hash"
+            className="block text-sm text-white/60 mb-1"
+          >
             {t("paymentsPage.paymentHashLabel")}
           </label>
           <input
+            id="payment-hash"
             type="text"
             value={paymentHash}
             onChange={(e) => setPaymentHash(e.target.value)}
@@ -466,7 +614,7 @@ function PaymentStatus({
 
         <button
           onClick={handleLookup}
-          disabled={submitting}
+          disabled={!enabled || submitting}
           className="w-full rounded-lg bg-blue-600 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50 sm:w-auto sm:py-2"
         >
           {submitting ? t("paymentsPage.checking") : t("paymentsPage.status")}
