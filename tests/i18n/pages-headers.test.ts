@@ -35,11 +35,13 @@ describe("Cloudflare Pages static headers", () => {
 });
 
 describe("Next.js dev headers", () => {
-  it("defines cross-origin isolation headers for local development", async () => {
+  it("isolates app routes while excluding the JoyID bridge", async () => {
     const nextConfig = await loadNextConfig(PHASE_DEVELOPMENT_SERVER);
     expect(nextConfig.headers).toBeDefined();
     const headerRules = await nextConfig.headers!();
-    const allRouteRule = headerRules.find((rule) => rule.source === "/:path*");
+    const allRouteRule = headerRules.find(
+      (rule) => rule.source === "/:path((?!joyid-sign-bridge).*)",
+    );
 
     expect(allRouteRule?.headers).toEqual(
       expect.arrayContaining([
@@ -69,6 +71,13 @@ describe("Next.js dev headers", () => {
           key: "Cross-Origin-Opener-Policy",
           value: "same-origin-allow-popups",
         },
+      ]),
+    );
+    expect(bridgeRule?.headers).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          key: "Cross-Origin-Embedder-Policy",
+        }),
       ]),
     );
   });

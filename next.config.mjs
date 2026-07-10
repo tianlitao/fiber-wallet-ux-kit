@@ -6,7 +6,7 @@ const createNextConfig = (phase) => ({
   async headers() {
     return [
       {
-        source: "/:path*",
+        source: "/:path((?!joyid-sign-bridge).*)",
         headers: [
           {
             key: "Cross-Origin-Opener-Policy",
