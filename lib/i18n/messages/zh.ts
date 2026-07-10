@@ -80,6 +80,10 @@ export const zh: Messages = {
     fundingAmountPlaceholder: "例如 600",
     fundingAmountHelp:
       "这些 CKB 将锁定在你与 fiber.nervosscan.com 之间的通道中，最低金额为 600 CKB。",
+    capacitySummary: "可用通道容量",
+    usableChannels: "可用通道",
+    outboundCapacity: "出站容量",
+    inboundCapacity: "入站容量",
     channelList: "通道列表",
     loading: "加载中...",
     refresh: "刷新",

@@ -84,6 +84,10 @@ const enMessages = {
     fundingAmountPlaceholder: "e.g. 600",
     fundingAmountHelp:
       "This CKB will be locked in a channel with fiber.nervosscan.com. The minimum amount is 600 CKB.",
+    capacitySummary: "Usable channel capacity",
+    usableChannels: "Usable channels",
+    outboundCapacity: "Outbound capacity",
+    inboundCapacity: "Inbound capacity",
     channelList: "Channel List",
     loading: "Loading...",
     refresh: "Refresh",

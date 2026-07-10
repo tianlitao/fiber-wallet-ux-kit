@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useFiber } from "@/lib/fiberContext";
 import {
   ckbToShannons,
@@ -10,6 +10,7 @@ import {
   DEFAULT_PEER_PUBKEY,
   DEFAULT_PEER_ADDRESS,
 } from "@/lib/fiberConfig";
+import { summarizeUsableChannels } from "@/lib/paymentInfrastructure";
 import { truncateAddress } from "@/utils/stringUtils";
 import Navigation from "@/components/Navigation";
 import ConnectWallet from "@/components/ConnectWallet";
@@ -58,6 +59,10 @@ export default function ChannelsPage() {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [loading, setLoading] = useState(false);
   const [showOpenForm, setShowOpenForm] = useState(false);
+  const capacitySummary = useMemo(
+    () => summarizeUsableChannels(channels),
+    [channels],
+  );
 
   const refreshChannels = useCallback(async () => {
     if (!fiber) return;
@@ -138,6 +143,45 @@ export default function ChannelsPage() {
             }}
           />
         )}
+
+        <section
+          aria-label={t("channelsPage.capacitySummary")}
+          className="mb-6 grid grid-cols-1 border-y border-white/10 sm:grid-cols-3"
+        >
+          <div className="py-4 sm:pr-4">
+            <div className="text-xs text-white/50">
+              {t("channelsPage.usableChannels")}
+            </div>
+            <div
+              className="mt-1 text-xl font-semibold text-white"
+              data-testid="usable-channel-count"
+            >
+              {capacitySummary.usableChannelCount}
+            </div>
+          </div>
+          <div className="border-t border-white/10 py-4 sm:border-l sm:border-t-0 sm:px-4">
+            <div className="text-xs text-white/50">
+              {t("channelsPage.outboundCapacity")}
+            </div>
+            <div
+              className="mt-1 text-xl font-semibold text-white"
+              data-testid="outbound-capacity"
+            >
+              {shannonsToDisplay(capacitySummary.outboundCapacity.toString())} CKB
+            </div>
+          </div>
+          <div className="border-t border-white/10 py-4 sm:border-l sm:border-t-0 sm:pl-4">
+            <div className="text-xs text-white/50">
+              {t("channelsPage.inboundCapacity")}
+            </div>
+            <div
+              className="mt-1 text-xl font-semibold text-white"
+              data-testid="inbound-capacity"
+            >
+              {shannonsToDisplay(capacitySummary.inboundCapacity.toString())} CKB
+            </div>
+          </div>
+        </section>
 
         {/* Channel List */}
         <div className="rounded-xl bg-[#1a1a1a] border border-white/10 p-6">

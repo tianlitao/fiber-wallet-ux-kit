@@ -222,6 +222,62 @@ describe("ChannelsPage", () => {
     expect(screen.queryByText("Peer Node")).not.toBeInTheDocument();
   });
 
+  it("shows aggregate capacity from enabled ready-state channels only", async () => {
+    fiberState.fiber.listChannels.mockResolvedValue({
+      channels: [
+        {
+          channel_id: "0xready",
+          pubkey: DEFAULT_PEER_PUBKEY,
+          state: { state_name: "CHANNEL_READY", state_flags: "0x0" },
+          enabled: true,
+          is_public: true,
+          local_balance: "100000000",
+          remote_balance: "200000000",
+        },
+        {
+          channel_id: "0xnormal",
+          pubkey: DEFAULT_PEER_PUBKEY,
+          state: { state_name: "CHANNEL_NORMAL", state_flags: "0x0" },
+          enabled: true,
+          is_public: true,
+          local_balance: "200000000",
+          remote_balance: "500000000",
+        },
+        {
+          channel_id: "0xdisabled",
+          pubkey: DEFAULT_PEER_PUBKEY,
+          state: { state_name: "CHANNEL_READY", state_flags: "0x0" },
+          enabled: false,
+          is_public: true,
+          local_balance: "900000000",
+          remote_balance: "900000000",
+        },
+        {
+          channel_id: "0xshutdown",
+          pubkey: DEFAULT_PEER_PUBKEY,
+          state: { state_name: "SHUTDOWN", state_flags: "0x0" },
+          enabled: true,
+          is_public: true,
+          local_balance: "900000000",
+          remote_balance: "900000000",
+        },
+      ],
+    });
+
+    await renderChannelsWithLocaleLayout("en");
+
+    expect(screen.getByText("Usable channels")).toBeInTheDocument();
+    expect(screen.getByTestId("usable-channel-count")).toHaveTextContent("2");
+    expect(screen.getByText("Outbound capacity")).toBeInTheDocument();
+    expect(screen.getByTestId("outbound-capacity")).toHaveTextContent(
+      "3.0000 CKB",
+    );
+    expect(screen.getByText("Inbound capacity")).toBeInTheDocument();
+    expect(screen.getByTestId("inbound-capacity")).toHaveTextContent(
+      "7.0000 CKB",
+    );
+  });
+
   it("interpolates locale message placeholders through the locale layout", async () => {
     await renderInterpolationProbe("zh");
 
