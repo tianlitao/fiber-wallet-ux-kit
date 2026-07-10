@@ -21,11 +21,13 @@ The project is a working reference kit rather than a consumer wallet product. It
 
 ## Hosted demo
 
-[fiber-wallet-ux-kit.tianlitao3399.workers.dev](http://fiber-wallet-ux-kit.tianlitao3399.workers.dev/)
+[fiber-wallet-ux-kit.tianlitao3399.workers.dev](https://fiber-wallet-ux-kit.tianlitao3399.workers.dev/)
 
 ## Video demonstration
 
-Video URL will be added after recording.
+**Status: maintainer action required.** Record and upload the demonstration
+using [DEMO_SCRIPT.md](./DEMO_SCRIPT.md), then place the public video URL here
+and in the final CKBoost submission.
 
 ## Fiber infrastructure gap addressed
 
@@ -46,12 +48,15 @@ Fiber Wallet UX Kit addresses those gaps with a runnable, tested reference imple
 - Identity recovery through mnemonic import, with channel database portability kept out of scope for the hackathon demo.
 - CCC wallet connection on CKB Testnet.
 - Default-peer channel setup flow with external funding transaction signing.
-- Channel listing and close actions.
+- Channel listing, exact usable-capacity summary, and close actions.
 - Invoice creation, parsing, lookup, and QR display.
 - Invoice payment, keysend payment, scanner fallback, status polling, and recent activity.
+- Exact fixed-point CKB amount parsing with operation-specific validation.
+- Reusable payment readiness APIs, a React hook, and stable diagnostic codes.
+- Fiber `dry_run` preflight before real payment, with localized recovery guidance.
 - English and Chinese routes.
 - Static export and Cloudflare Pages headers.
-- Unit and page-level test coverage.
+- Unit and page-level test coverage plus Google Chrome end-to-end checks.
 
 ## What is limited or needs production hardening
 
@@ -59,9 +64,22 @@ Fiber Wallet UX Kit addresses those gaps with a runnable, tested reference imple
 - The hackathon flow targets CKB Testnet.
 - Channel funding depends on wallet support and sufficient testnet CKB.
 - The 12-word mnemonic restores the Fiber node identity, not the complete Fiber channel database. Channel state is browser-local in the Fiber runtime's IndexedDB storage.
-- Amount parsing should be replaced with strict fixed-point parsing before production use.
+- A successful dry run finds a viable route at check time but does not reserve liquidity or guarantee settlement.
 - Recent activity is browser-local rather than synced or indexed.
 - The UI is a reference implementation, not an audited production wallet.
+
+## Implementation status
+
+- **Working:** browser Fiber lifecycle, encrypted local identity, external
+  channel funding, exact amounts, channel capacity, invoices, QR flows,
+  readiness preflight, payment diagnostics, payment submission, localization,
+  static deployment, and automated browser checks.
+- **Mocked only in automated tests:** funded channel and payment RPC responses
+  are deterministic test doubles so CI does not require testnet funds. The app
+  itself calls the real `fiber-js` APIs.
+- **Production hardening remaining:** security audit, portable channel database
+  recovery, configurable networks/peers/assets, remote activity indexing, and
+  broader wallet compatibility testing.
 
 ## Technical breakdown
 
@@ -73,15 +91,16 @@ See [DEMO_SCRIPT.md](./DEMO_SCRIPT.md).
 
 ## Future roadmap
 
-- Extract reusable hooks and components for wallet/app integration.
-- Add a payment readiness module for peer, channel, route, and capacity checks.
+- Extract the remaining channel-funding and invoice flows into reusable hooks
+  and components.
 - Add a safe channel database backup or migration flow once the underlying Fiber recovery model is production-ready.
-- Add structured failure diagnostics and recovery flows.
 - Add merchant checkout primitives and hosted payment page examples.
 - Add multi-asset invoice and payment request support.
 - Add richer node and channel health monitoring.
-- Add Playwright e2e tests for hosted demos and mobile browsers.
 
 ## AI allowance claim
 
-AI tooling was used for analysis, documentation, packaging, and implementation assistance. Claim details can be added after final submission if eligible.
+AI tooling was used for analysis, documentation, test design, and implementation
+assistance. No separate AI allowance amount is claimed in this repository; any
+award-related claim will follow the organizer's eligibility and disclosure
+rules.

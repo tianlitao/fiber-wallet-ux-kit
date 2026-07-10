@@ -10,7 +10,7 @@ The goal is to show how wallets and apps can integrate Fiber node startup, local
 
 ## Flow
 
-1. Open the hosted demo at `http://fiber-wallet-ux-kit.tianlitao3399.workers.dev/en`.
+1. Open the hosted demo at `https://fiber-wallet-ux-kit.tianlitao3399.workers.dev/en`.
 2. Show the Dashboard identity wallet card.
 3. Create or import the 12-word Fiber identity wallet.
 4. Set a local password.
@@ -18,13 +18,18 @@ The goal is to show how wallets and apps can integrate Fiber node startup, local
 6. Point out the runtime status, node pubkey, connected peers, and default peer readiness.
 7. Connect a CKB Testnet wallet through CCC.
 8. Open the Channels page.
-9. Show the default peer and explain that the flow abstracts the channel setup path.
-10. Open a channel with at least 600 CKB when testnet funds are available.
-11. Open the Invoices page.
-12. Create an invoice and show the QR card and large QR modal.
-13. Open the Payments page.
-14. Show invoice paste mode, keysend mode, scanner entry, and payment status polling.
-15. Close by showing the documentation files and test commands.
+9. Show usable channel count plus aggregate outbound and inbound capacity.
+10. Show the default peer and explain that the flow abstracts the channel setup path.
+11. Open a channel with at least 600 CKB when testnet funds are available.
+12. Open the Invoices page.
+13. Create an invoice and show the QR card and large QR modal.
+14. Open the Payments page.
+15. Paste an invoice and run Check readiness to show a successful Fiber dry run.
+16. Show one blocked readiness result and its recovery guidance, such as a
+    disconnected peer or unavailable channel.
+17. Show keysend mode, scanner entry, and payment status polling.
+18. Open `lib/paymentInfrastructure/index.ts` to show the reusable exports.
+19. Close by showing the documentation files and the full test commands.
 
 ## Voiceover points
 
@@ -36,7 +41,23 @@ The goal is to show how wallets and apps can integrate Fiber node startup, local
 - Cloudflare Pages headers enable `SharedArrayBuffer`.
 - Cloudflare Pages headers keep Fiber runtime pages cross-origin isolated.
 - The project includes tests and is designed to be extracted into reusable SDK-style modules.
+- Readiness uses Fiber's real `dry_run`; it finds a route at check time but does
+  not reserve liquidity.
 
 ## Closing
 
-The next step is to extract these flows into reusable hooks, SDK components, readiness checks, and payment diagnostics so other Fiber wallets, merchants, and services can integrate faster.
+The kit now exposes exact amount handling, payment readiness, diagnostics, and
+channel capacity as reusable infrastructure. The next step is to package the
+remaining channel and invoice flows for broader wallet and merchant
+integrations.
+
+## Recording and Upload Checklist
+
+- Record both readiness success and blocked recovery states.
+- Show channel outbound and inbound capacity.
+- Show the public `lib/paymentInfrastructure` exports.
+- Keep wallet addresses, seed words, passwords, and private data out of the
+  recording.
+- Upload the final video to a publicly accessible URL.
+- Add that URL to `docs/HACKATHON_SUBMISSION.md`.
+- Add the same repository, demo, and video URLs to the CKBoost submission.

@@ -7,7 +7,7 @@ This project is prepared for **Gone in 60ms: Fiber Network Infrastructure Hackat
 ## Links
 
 - Repository: [tianlitao/fiber-wallet-ux-kit](https://github.com/tianlitao/fiber-wallet-ux-kit)
-- Hosted demo: [fiber-wallet-ux-kit.tianlitao3399.workers.dev](http://fiber-wallet-ux-kit.tianlitao3399.workers.dev/)
+- Hosted demo: [fiber-wallet-ux-kit.tianlitao3399.workers.dev](https://fiber-wallet-ux-kit.tianlitao3399.workers.dev/)
 
 ## Infrastructure gap
 
@@ -32,10 +32,15 @@ Fiber Wallet UX Kit packages those integration patterns into a runnable Next.js 
 - Default-peer channel setup flow against `fiber.nervosscan.com`.
 - External funding transaction signing through the connected CKB wallet.
 - Channel list, close, and force-close actions.
+- Exact fixed-point CKB parsing without floating-point conversion.
+- Reusable payment readiness, channel-capacity, and diagnostic APIs.
+- Invoice and keysend dry-run checks with actionable failure guidance.
+- Aggregate usable inbound and outbound channel capacity.
 - Invoice creation, parsing, lookup, QR display, and large QR modal.
 - Payment send, keysend, status polling, scan-to-pay, and recent activity storage.
 - Cloudflare Pages static export with required COOP/COEP headers.
-- Vitest coverage for i18n, dashboard identity-wallet flows, Fiber context, channels, invoices, payments, and mobile flows.
+- Vitest coverage for i18n, exact amounts, payment infrastructure, dashboard identity-wallet flows, Fiber context, channels, invoices, payments, and mobile flows.
+- Playwright verification in Google Chrome for HTTPS isolation, localized routes, the JoyID bridge exception, and mobile layout.
 
 ## Demo flow
 
@@ -56,6 +61,7 @@ The app is intentionally structured as a frontend integration kit:
 
 - `lib/fiberContext.tsx` owns Fiber runtime lifecycle, node status, peer connection checks, and cleanup.
 - `lib/fiberIdentityWallet/*` owns mnemonic validation, password encryption, storage, and Fiber key derivation.
+- `lib/paymentInfrastructure/*` exposes exact channel-capacity summaries, stable payment diagnostics, Fiber `dry_run` readiness checks, and a reusable React hook.
 - `@nervosnetwork/fiber-js` persists Fiber runtime data in browser IndexedDB. This kit does not export or migrate the channel database across browsers.
 - `app/[locale]/channels/page.tsx` demonstrates external channel funding with CCC transaction signing.
 - `app/[locale]/invoices/page.tsx` demonstrates Fiber invoice creation, parsing, lookup, QR display, and local recent history.
@@ -92,6 +98,7 @@ https://localhost:3000
 npm run lint
 npm test
 npm run build
+npm run test:e2e
 ```
 
 ## Cloudflare Pages deployment
@@ -132,22 +139,24 @@ Fiber runtime routes keep these headers so the app stays cross-origin isolated. 
 - Channel funding currently assumes a connected CCC-compatible CKB wallet with enough testnet CKB.
 - The 12-word mnemonic restores the local Fiber identity, not the full channel database. Existing channels depend on the browser-local Fiber IndexedDB state and are not currently portable through mnemonic import alone.
 - Recent invoice and payment history are stored locally in the browser.
-- Amount parsing should be hardened further before production use.
+- A successful payment dry run finds a route at check time but does not reserve liquidity or guarantee later settlement.
 - The project is a reusable infrastructure reference, not audited production wallet software.
 
 ## Hackathon submission material
 
 - [docs/HACKATHON_SUBMISSION.md](./docs/HACKATHON_SUBMISSION.md)
+- [docs/SUBMISSION_CHECKLIST.md](./docs/SUBMISSION_CHECKLIST.md)
 - [docs/TECHNICAL_BREAKDOWN.md](./docs/TECHNICAL_BREAKDOWN.md)
 - [docs/DEMO_SCRIPT.md](./docs/DEMO_SCRIPT.md)
 
 ## Roadmap
 
-- Extract the wallet/payment flows into reusable React components and hooks.
-- Add a payment readiness API for capacity, peer connectivity, and route confidence checks.
+- Extract the remaining channel-funding and invoice flows into reusable React components and hooks.
 - Add a documented channel database backup or migration path after upstream Fiber recovery semantics are ready for production use.
-- Add structured payment failure diagnostics with recovery suggestions.
 - Add a developer SDK wrapper for invoice/payment intents.
 - Add richer channel health metrics and alerting hooks.
 - Expand multi-asset invoice and payment request support.
-- Add e2e browser tests for hosted demos and mobile viewports.
+
+## License
+
+[MIT](./LICENSE)

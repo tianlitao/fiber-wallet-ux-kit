@@ -94,6 +94,45 @@ Fiber runtime pages need `COOP/COEP` headers for `SharedArrayBuffer`. The projec
 - status polling for created or inflight payments;
 - keeping local recent payment history.
 
+## Reusable payment readiness and diagnostics
+
+`lib/paymentInfrastructure` is a page-independent integration boundary. It
+exports:
+
+- `summarizeUsableChannels`, a pure aggregate of enabled `Ready` or `Normal`
+  channel capacity;
+- `diagnosePaymentError`, a stable mapping from Fiber/RPC failures to
+  actionable diagnostic codes;
+- `checkPaymentReadiness`, a local prerequisite assessment followed by a real
+  Fiber payment dry run;
+- `usePaymentReadiness`, a React lifecycle wrapper that invalidates stale
+  results and prevents out-of-order requests from overwriting newer checks.
+
+Another wallet or component can use the API without importing this app's
+context:
+
+```ts
+const result = await checkPaymentReadiness({
+  fiber,
+  nodeStatus: "running",
+  peerConnected: true,
+  channels,
+  request: { mode: "invoice", invoice },
+});
+
+if (result.status === "ready") {
+  await fiber.sendPayment({ invoice });
+}
+```
+
+The dry run proves that Fiber found a viable route at the time of the check. It
+does not reserve route liquidity, so the real payment can still fail if network
+conditions change.
+
+CKB amounts are parsed and formatted with strings and `bigint` in
+`lib/fiberConfig.ts`. No CKB input path converts through JavaScript
+floating-point numbers.
+
 ## Static deployment
 
 The app uses `output: "export"` in `next.config.mjs`, so it can be deployed as static files. `public/_headers` is required on Cloudflare Pages to preserve the browser runtime requirements for Fiber WASM.
@@ -107,14 +146,16 @@ The Vitest suite covers:
 - Fiber runtime support errors;
 - dashboard identity-wallet flows, channels, invoices, and payments pages;
 - mobile invoice and payment paths;
+- exact CKB amount boundaries, payment diagnostics, readiness, and stale hook
+  requests;
 - QR card and scanner components.
+- Google Chrome HTTPS, cross-origin isolation, localized routes, JoyID bridge
+  headers, and desktop/mobile layout through Playwright.
 
 ## Production hardening notes
 
-- Replace floating-point CKB parsing with strict fixed-point string parsing.
 - Extract channel funding into a reusable hook or service.
 - Add an explicit channel database backup or migration mechanism only after the recovery and concurrency semantics are well defined.
-- Add structured Fiber error categories and recovery guidance.
-- Add route confidence and liquidity readiness checks before sending payments.
-- Add e2e tests in a real browser with `crossOriginIsolated` verification.
 - Add configurable peers, assets, and network selection.
+- Audit wallet signing, browser storage, and payment flows before production
+  use.
