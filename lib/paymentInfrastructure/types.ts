@@ -17,3 +17,32 @@ export interface PaymentDiagnostic {
   messageKey: `paymentsPage.diagnostics.${PaymentDiagnosticCode}`;
   technicalDetail: string;
 }
+
+export type PaymentNodeStatus =
+  | "idle"
+  | "starting"
+  | "running"
+  | "error"
+  | "stopped";
+
+export type PaymentRequest =
+  | { mode: "invoice"; invoice: string }
+  | {
+      mode: "keysend";
+      targetPubkey: string;
+      amount: `0x${string}`;
+    };
+
+export interface ChannelCapacitySummary {
+  channelsKnown: boolean;
+  usableChannelCount: number;
+  outboundCapacity: bigint;
+  inboundCapacity: bigint;
+}
+
+export interface PaymentReadinessResult {
+  status: "ready" | "warning" | "blocked";
+  checkedAt: number;
+  summary: ChannelCapacitySummary;
+  diagnostic?: PaymentDiagnostic;
+}
