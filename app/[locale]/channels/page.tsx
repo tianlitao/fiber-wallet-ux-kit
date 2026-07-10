@@ -279,7 +279,16 @@ function OpenChannelForm({
       showErrorMessage(formatPrefixedError("channelsPage.missingAmountError"));
       return;
     }
-    if (Number(amount) < 600) {
+
+    let fundingAmount: `0x${string}`;
+    try {
+      fundingAmount = ckbToShannons(amount);
+    } catch {
+      showErrorMessage(formatPrefixedError("channelsPage.invalidAmountError"));
+      return;
+    }
+
+    if (BigInt(fundingAmount) < 60_000_000_000n) {
       showErrorMessage(formatPrefixedError("channelsPage.minimumAmountError"));
       return;
     }
@@ -359,7 +368,7 @@ function OpenChannelForm({
 
       const openPromise = fiber.openChannelWithExternalFunding({
         pubkey: DEFAULT_PEER_PUBKEY,
-        funding_amount: ckbToShannons(amount),
+        funding_amount: fundingAmount,
         public: true,
         shutdown_script: fundingLockScript,
         funding_lock_script: fundingLockScript,

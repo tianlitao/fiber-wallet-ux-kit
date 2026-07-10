@@ -70,15 +70,31 @@ export const DEFAULT_FUNDING_FEE_RATE = "0x7d0"; // 2000 shannons/KW
 
 // --- CKB unit helpers ---
 
-export function ckbToShannons(ckb: string): `0x${string}` {
-  const num = BigInt(Math.floor(parseFloat(ckb) * 1e8));
-  return `0x${num.toString(16)}`;
+const SHANNONS_PER_CKB = 100_000_000n;
+const CKB_AMOUNT_PATTERN = /^(0|[1-9]\d*)(?:\.(\d{1,8}))?$/;
+
+export function ckbToShannons(input: string): `0x${string}` {
+  const value = input.trim();
+  const match = CKB_AMOUNT_PATTERN.exec(value);
+
+  if (!match) {
+    throw new Error("Enter a valid CKB amount with up to 8 decimals.");
+  }
+
+  const whole = BigInt(match[1]);
+  const fraction = (match[2] ?? "").padEnd(8, "0");
+  const shannons =
+    whole * SHANNONS_PER_CKB + BigInt(fraction.length > 0 ? fraction : "0");
+
+  return `0x${shannons.toString(16)}`;
 }
 
-export function shannonsToDisplay(hex: string): string {
-  const num = BigInt(hex);
-  const ckb = Number(num) / 1e8;
-  return ckb.toFixed(4);
+export function shannonsToDisplay(value: string): string {
+  const shannons = BigInt(value);
+  const whole = shannons / SHANNONS_PER_CKB;
+  const fourDecimals = (shannons % SHANNONS_PER_CKB) / 10_000n;
+
+  return `${whole}.${fourDecimals.toString().padStart(4, "0")}`;
 }
 
 export function hexToNumber(hex: string): number {

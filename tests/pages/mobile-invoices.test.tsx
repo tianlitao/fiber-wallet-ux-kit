@@ -110,4 +110,16 @@ describe("Mobile invoices page", () => {
       screen.getByText("ckt1qexampleinvoiceaddress"),
     ).toBeInTheDocument();
   });
+
+  it("rejects a zero-value invoice before calling Fiber", async () => {
+    await renderWithLocaleLayout("zh");
+
+    fireEvent.change(screen.getByPlaceholderText("例如 1"), {
+      target: { value: "0" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "创建发票" }));
+
+    expect(await screen.findByText("金额必须大于 0。")).toBeInTheDocument();
+    expect(fiberState.fiber.newInvoice).not.toHaveBeenCalled();
+  });
 });

@@ -233,6 +233,19 @@ function CreateInvoice({
       return;
     }
 
+    let invoiceAmount: `0x${string}`;
+    try {
+      invoiceAmount = ckbToShannons(trimmedAmount);
+    } catch {
+      setError(t("invoicesPage.invalidAmountError"));
+      return;
+    }
+
+    if (BigInt(invoiceAmount) === 0n) {
+      setError(t("invoicesPage.amountMustBePositiveError"));
+      return;
+    }
+
     setSubmitting(true);
     setError("");
     setResult(null);
@@ -246,7 +259,7 @@ function CreateInvoice({
         .join("")}` as `0x${string}`;
 
       const invoiceResult: InvoiceResult = await fiber.newInvoice({
-        amount: ckbToShannons(trimmedAmount),
+        amount: invoiceAmount,
         description: description || undefined,
         currency: "Fibt",
         payment_preimage: preimageHex,

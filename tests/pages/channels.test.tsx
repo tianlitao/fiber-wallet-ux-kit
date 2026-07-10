@@ -252,6 +252,23 @@ describe("ChannelsPage", () => {
     ).toBeInTheDocument();
   });
 
+  it("rejects an invalid funding amount before reading the wallet", async () => {
+    await renderChannelsWithLocaleLayout("en");
+
+    fireEvent.click(screen.getByRole("button", { name: "Open Channel" }));
+    fireEvent.change(screen.getByPlaceholderText("e.g. 600"), {
+      target: { value: "600.000000001" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Open & Fund Channel" }));
+
+    expect(
+      await screen.findByText(
+        "Error: Enter a valid CKB amount with up to 8 decimal places.",
+      ),
+    ).toBeInTheDocument();
+    expect(signerState.getAddresses).not.toHaveBeenCalled();
+  });
+
   it("passes JoyID lock cell deps when opening a funded channel", async () => {
     signerState.getAddresses.mockResolvedValue(["ckt1qjoyid"]);
     addressFromStringMock.mockResolvedValue({

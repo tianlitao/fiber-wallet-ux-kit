@@ -126,4 +126,23 @@ describe("Mobile payments page", () => {
       ).toBeInTheDocument();
     });
   });
+
+  it("rejects a zero-value keysend before calling Fiber", async () => {
+    const sendPayment = vi.fn();
+    fiberState.fiber = { sendPayment };
+
+    await renderPaymentsPage();
+
+    fireEvent.click(screen.getByRole("button", { name: "Keysend" }));
+    fireEvent.change(screen.getByPlaceholderText("收款方节点公钥"), {
+      target: { value: "02recipient" },
+    });
+    fireEvent.change(screen.getByPlaceholderText("例如 1"), {
+      target: { value: "0" },
+    });
+    fireEvent.click(screen.getAllByRole("button", { name: "发送支付" }).at(-1)!);
+
+    expect(await screen.findByText("金额必须大于 0。")).toBeInTheDocument();
+    expect(sendPayment).not.toHaveBeenCalled();
+  });
 });

@@ -200,9 +200,24 @@ function SendPayment({
           return;
         }
 
+        let paymentAmount: `0x${string}`;
+        try {
+          paymentAmount = ckbToShannons(amount);
+        } catch {
+          setError(t("paymentsPage.invalidAmountError"));
+          setSubmitting(false);
+          return;
+        }
+
+        if (BigInt(paymentAmount) === 0n) {
+          setError(t("paymentsPage.amountMustBePositiveError"));
+          setSubmitting(false);
+          return;
+        }
+
         payResult = await fiber.sendPayment({
           target_pubkey: targetPubkey.trim(),
-          amount: ckbToShannons(amount),
+          amount: paymentAmount,
           keysend: true,
         });
         saveRecentPayment(

@@ -106,6 +106,8 @@ const enMessages = {
     errorPrefix: "Error:",
     walletRequiredError: "Connect your CKB wallet first.",
     missingAmountError: "Please fill in the funding amount.",
+    invalidAmountError:
+      "Enter a valid CKB amount with up to 8 decimal places.",
     minimumAmountError: "Amount must be at least 600 CKB.",
     connectingDefaultPeer: "Connecting to fiber.nervosscan.com...",
     failedToConnectDefaultPeer:
@@ -152,6 +154,9 @@ const enMessages = {
     descriptionOptionalLabel: "Description (optional)",
     descriptionPlaceholder: "What's this invoice for?",
     amountRequiredError: "Amount is required.",
+    invalidAmountError:
+      "Enter a valid CKB amount with up to 8 decimal places.",
+    amountMustBePositiveError: "Amount must be greater than 0.",
     creating: "Creating...",
     created: "Invoice created!",
     invoiceAddressLabel: "Invoice Address",
@@ -208,6 +213,9 @@ const enMessages = {
     amountPlaceholder: "e.g. 1",
     enterInvoiceError: "Please enter an invoice.",
     fillAllFieldsError: "Please fill in all fields.",
+    invalidAmountError:
+      "Enter a valid CKB amount with up to 8 decimal places.",
+    amountMustBePositiveError: "Amount must be greater than 0.",
     routeNotReadyHint:
       "No payment route is available yet. Channels and routing data may still be syncing. Please wait a moment and try again.",
     sending: "Sending...",
