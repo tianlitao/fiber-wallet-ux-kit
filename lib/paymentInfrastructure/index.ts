@@ -4,6 +4,7 @@ export {
   checkPaymentReadiness,
   summarizeUsableChannels,
 } from "./readiness";
+export { usePaymentReadiness } from "./usePaymentReadiness";
 export type {
   CheckPaymentReadinessInput,
   LocalReadinessInput,
@@ -17,3 +18,4 @@ export type {
   PaymentReadinessResult,
   PaymentRequest,
 } from "./types";
+export type { UsePaymentReadinessOptions } from "./usePaymentReadiness";
