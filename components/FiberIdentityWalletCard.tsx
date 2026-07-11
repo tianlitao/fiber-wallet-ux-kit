@@ -15,6 +15,7 @@ import { truncateAddress } from "@/utils/stringUtils";
 
 type FiberStatus = "idle" | "starting" | "running" | "error" | "stopped";
 type Mode = "loading" | "empty" | "create" | "import" | "locked";
+type CopyStatus = "idle" | "copied" | "failed";
 
 type Props = {
   status: FiberStatus;
@@ -40,6 +41,8 @@ export default function FiberIdentityWalletCard({
   const [importMnemonic, setImportMnemonic] = useState("");
   const [confirmedBackup, setConfirmedBackup] = useState(false);
   const [message, setMessage] = useState("");
+  const [nodePubkeyCopyStatus, setNodePubkeyCopyStatus] =
+    useState<CopyStatus>("idle");
 
   useEffect(() => {
     void hasFiberIdentityWallet()
@@ -52,6 +55,20 @@ export default function FiberIdentityWalletCard({
     // Re-running it on every render would overwrite in-progress UI flows.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    setNodePubkeyCopyStatus("idle");
+  }, [nodeInfo?.pubkey]);
+
+  useEffect(() => {
+    if (nodePubkeyCopyStatus !== "copied") return;
+
+    const timeout = window.setTimeout(() => {
+      setNodePubkeyCopyStatus("idle");
+    }, 2000);
+
+    return () => window.clearTimeout(timeout);
+  }, [nodePubkeyCopyStatus]);
 
   const handleCreate = () => {
     setMnemonicDraft(generateFiberIdentityMnemonic());
@@ -107,6 +124,24 @@ export default function FiberIdentityWalletCard({
     setMnemonicDraft("");
     setConfirmedBackup(false);
     setMessage("");
+  };
+
+  const handleCopyNodePubkey = async () => {
+    if (
+      !nodeInfo?.pubkey ||
+      typeof navigator === "undefined" ||
+      !navigator.clipboard
+    ) {
+      setNodePubkeyCopyStatus("failed");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(nodeInfo.pubkey);
+      setNodePubkeyCopyStatus("copied");
+    } catch {
+      setNodePubkeyCopyStatus("failed");
+    }
   };
 
   return (
@@ -298,6 +333,15 @@ export default function FiberIdentityWalletCard({
           <InfoCard
             label={t("dashboard.nodePubkey")}
             value={truncateAddress(nodeInfo.pubkey, 12, 8)}
+            actionLabel={t("dashboard.copyNodePubkey")}
+            feedback={
+              nodePubkeyCopyStatus === "copied"
+                ? t("dashboard.nodePubkeyCopied")
+                : nodePubkeyCopyStatus === "failed"
+                  ? t("dashboard.nodePubkeyCopyFailed")
+                  : undefined
+            }
+            onClick={handleCopyNodePubkey}
           />
           <InfoCard label={t("dashboard.version")} value={nodeInfo.version} />
           <InfoCard
@@ -320,11 +364,54 @@ export default function FiberIdentityWalletCard({
   );
 }
 
-function InfoCard({ label, value }: { label: string; value: string }) {
+type InfoCardProps = {
+  label: string;
+  value: string;
+  actionLabel?: string;
+  feedback?: string;
+  onClick?: () => void;
+};
+
+function InfoCard({
+  label,
+  value,
+  actionLabel,
+  feedback,
+  onClick,
+}: InfoCardProps) {
+  const content = (
+    <>
+      <div className="mb-1 flex items-center justify-between gap-3">
+        <span className="text-xs text-white/40">{label}</span>
+        {actionLabel ? (
+          <span
+            aria-live="polite"
+            className="shrink-0 text-xs font-medium text-blue-300"
+          >
+            {feedback || actionLabel}
+          </span>
+        ) : null}
+      </div>
+      <div className="break-all text-left text-sm font-medium">{value}</div>
+    </>
+  );
+
+  if (onClick && actionLabel) {
+    return (
+      <button
+        type="button"
+        aria-label={actionLabel}
+        onClick={onClick}
+        className="w-full rounded-lg bg-white/5 p-4 text-left transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+      >
+        {content}
+      </button>
+    );
+  }
+
   return (
     <div className="rounded-lg bg-white/5 p-4">
-      <div className="text-xs text-white/40 mb-1">{label}</div>
-      <div className="text-sm font-medium break-all">{value}</div>
+      {content}
     </div>
   );
 }

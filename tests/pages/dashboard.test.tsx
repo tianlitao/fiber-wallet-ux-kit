@@ -148,4 +148,60 @@ describe("DashboardPage", () => {
       expect(deleteFiberIdentityWalletMock).toHaveBeenCalledTimes(1);
     });
   });
+
+  it("copies the complete node pubkey and shows localized feedback", async () => {
+    const pubkey =
+      "0376333505e0cfc13bf2ffee4e55027606388b24f00acf418f6535d89cd30749da";
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal("navigator", {
+      ...navigator,
+      clipboard: { writeText },
+    });
+    fiberState.status = "running";
+    fiberState.nodeInfo = {
+      pubkey,
+      version: "0.6.0",
+      channel_count: "0x1",
+      peers_count: "0x1",
+      open_channel_auto_accept_min_ckb_funding_amount: "0x0",
+    };
+
+    await renderDashboardWithLocaleLayout();
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: "复制节点公钥" }),
+    );
+
+    await waitFor(() => {
+      expect(writeText).toHaveBeenCalledWith(pubkey);
+      expect(screen.getByText("已复制")).toBeInTheDocument();
+    });
+  });
+
+  it("shows localized feedback when node pubkey copy fails", async () => {
+    const writeText = vi.fn().mockRejectedValue(new Error("denied"));
+    vi.stubGlobal("navigator", {
+      ...navigator,
+      clipboard: { writeText },
+    });
+    fiberState.status = "running";
+    fiberState.nodeInfo = {
+      pubkey:
+        "0376333505e0cfc13bf2ffee4e55027606388b24f00acf418f6535d89cd30749da",
+      version: "0.6.0",
+      channel_count: "0x1",
+      peers_count: "0x1",
+      open_channel_auto_accept_min_ckb_funding_amount: "0x0",
+    };
+
+    await renderDashboardWithLocaleLayout();
+
+    const copyButton = await screen.findByRole("button", {
+      name: "复制节点公钥",
+    });
+    fireEvent.click(copyButton);
+
+    expect(await screen.findByText("复制失败")).toBeInTheDocument();
+    expect(copyButton).toBeEnabled();
+  });
 });
